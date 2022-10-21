@@ -3,19 +3,17 @@ const { BlobServiceClient } = require('@azure/storage-blob')
 const config = require('./config/storage')
 let blobServiceClient
 let containersInitialised
-let container
 
-const connect = () => {
-  if (config.useConnectionStr) {
-    console.log('Using connection string for BlobServiceClient')
-    blobServiceClient = BlobServiceClient.fromConnectionString(config.connectionStr)
-  } else {
-    console.log('Using DefaultAzureCredential for BlobServiceClient')
-    const uri = `https://${config.storageAccount}.blob.core.windows.net`
-    blobServiceClient = new BlobServiceClient(uri, new DefaultAzureCredential())
-  }
-  container = blobServiceClient.getContainerClient(config.container)
+if (config.useConnectionStr) {
+  console.log('Using connection string for BlobServiceClient')
+  blobServiceClient = BlobServiceClient.fromConnectionString(config.connectionStr)
+} else {
+  console.log('Using DefaultAzureCredential for BlobServiceClient')
+  const uri = `https://${config.storageAccount}.blob.core.windows.net`
+  blobServiceClient = new BlobServiceClient(uri, new DefaultAzureCredential())
 }
+
+const container = blobServiceClient.getContainerClient(config.container)
 
 const initialiseContainers = async () => {
   if (config.createContainers) {
@@ -96,7 +94,6 @@ const sanitizeFilename = (filename) => {
 }
 
 module.exports = {
-  connect,
   getInboundFileList,
   getFile,
   renameFile,
