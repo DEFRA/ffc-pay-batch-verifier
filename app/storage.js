@@ -53,8 +53,8 @@ const getInboundFileList = async () => {
 
   const fileList = []
   for await (const file of container.listBlobsFlat({ prefix: config.inboundFolder })) {
-    if (file.name.startsWith('CTL_PENDING_') && file.name.endsWith('.dat')) {
-      fileList.push(file.name)
+    if (file.name.startsWith(`${config.inboundFolder}/CTL_PENDING_`) && file.name.endsWith('.dat')) {
+      fileList.push(file.name.replace(`${config.inboundFolder}/`, ''))
     }
   }
 
@@ -75,12 +75,12 @@ const moveFile = async (sourceFolder, destinationFolder, sourceFilename, destina
   return false
 }
 
-const archiveFile = async (filename, archiveFilename) => {
-  return moveFile(config.inboundFolder, config.archiveFolder, filename, archiveFilename)
+const archiveFile = async (filename) => {
+  return moveFile(config.inboundFolder, config.archiveFolder, filename, filename)
 }
 
-const quarantineFile = async (filename, quarantineFilename) => {
-  return moveFile(config.inboundFolder, config.quarantineFolder, filename, quarantineFilename)
+const quarantineFile = async (filename) => {
+  return moveFile(config.inboundFolder, config.quarantineFolder, filename, filename)
 }
 
 const renameFile = async (filename, targetFilename) => {

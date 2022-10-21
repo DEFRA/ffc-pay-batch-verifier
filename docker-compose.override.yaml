@@ -10,12 +10,12 @@ services:
     image: ffc-pay-batch-verifier-development
     container_name: ffc-pay-batch-verifier-development
     ports:
-      - "9250:9229"
+      - "9260:9229"
     volumes:
       - ./app:/home/node/app
       - ./package.json:/home/node/package.json
     environment:
-      AZURE_STORAGE_CONNECTION_STRING: DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://ffc-pay-batch-processor-azurite:10000/devstoreaccount1;
+      AZURE_STORAGE_CONNECTION_STRING: DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://ffc-pay-batch-verifier-azurite:10000/devstoreaccount1;
 
   ffc-pay-batch-verifier-azurite:
     volumes:
