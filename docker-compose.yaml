@@ -11,6 +11,6 @@ services:
       AZURE_STORAGE_USE_CONNECTION_STRING: "true"
       AZURE_STORAGE_CREATE_CONTAINERS: "true"
 
-  ffc-pay-batch-verifier-azurite:
+  ffc-pay-batch-azurite:
     image: mcr.microsoft.com/azure-storage/azurite:3.17.1
     command: "azurite-blob --loose --blobHost 0.0.0.0"
