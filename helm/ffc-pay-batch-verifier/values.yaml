@@ -34,6 +34,7 @@ container:
   azureStorageUseConnectionString: false
   azureStorageCreateContainers: false
   pollingInterval: 10000
+  pollingActive: true
 
 aadPodIdentity: true
 

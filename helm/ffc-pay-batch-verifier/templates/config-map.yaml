@@ -8,4 +8,5 @@ data:
   AZURE_STORAGE_USE_CONNECTION_STRING: {{ quote .Values.container.azureStorageUseConnectionString }}
   AZURE_STORAGE_CREATE_CONTAINERS: {{ quote .Values.container.azureStorageCreateContainers }}
   POLLING_INTERVAL: {{ quote .Values.container.pollingInterval }}
+  POLLING_ACTIVE: {{ quote .Values.container.pollingActive }}
 {{- end -}}
