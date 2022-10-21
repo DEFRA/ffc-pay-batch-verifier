@@ -36,3 +36,7 @@ container:
   pollingInterval: 10000
 
 aadPodIdentity: true
+
+azureIdentity:
+  clientID: not-a-real-clientID
+  resourceID: not-a-real-resourceID
