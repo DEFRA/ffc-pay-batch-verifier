@@ -12,5 +12,5 @@ services:
       AZURE_STORAGE_CREATE_CONTAINERS: "true"
 
   ffc-pay-batch-azurite:
-    image: mcr.microsoft.com/azure-storage/azurite:3.17.1
+    image: mcr.microsoft.com/azure-storage/azurite:3.20.1
     command: "azurite-blob --loose --blobHost 0.0.0.0"
