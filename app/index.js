@@ -1,7 +1,7 @@
 require('./insights').setup()
 require('log-timestamp')
-const verify = require('./verify')
+const poll = require('./poll')
 
 module.exports = (async () => {
-  await verify.start()
+  await poll.start()
 })()

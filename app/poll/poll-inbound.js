@@ -1,5 +1,5 @@
 const storage = require('../storage')
-const verifyBatch = require('./verify')
+const verifyBatch = require('../verify')
 
 const pollInbound = async () => {
   const inboundFiles = await storage.getInboundFileList()
