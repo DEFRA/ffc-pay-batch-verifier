@@ -1,0 +1,11 @@
+{
+  "bindings": [
+    {
+      "name": "myBlob",
+      "type": "blobTrigger",
+      "direction": "in",
+      "path": "batch/inbound/CTL_PENDING_{name}.dat",
+      "connection": "BATCH_STORAGE"
+    }
+  ]
+}
