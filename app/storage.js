@@ -34,7 +34,6 @@ const initialiseFolders = async () => {
   await inboundClient.upload(placeHolderText, placeHolderText.length)
   await archiveClient.upload(placeHolderText, placeHolderText.length)
   await quarantineClient.upload(placeHolderText, placeHolderText.length)
-  console.log('Folders ready')
 }
 
 const getBlob = async (folder, filename) => {
