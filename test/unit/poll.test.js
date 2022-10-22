@@ -2,6 +2,7 @@ jest.useFakeTimers()
 jest.spyOn(global, 'setTimeout')
 
 const config = require('../../app/config/verify')
+jest.mock('../../app/config/verify')
 
 jest.mock('../../app/poll/poll-inbound')
 const pollInbound = require('../../app/poll/poll-inbound')
@@ -9,6 +10,11 @@ const pollInbound = require('../../app/poll/poll-inbound')
 const poll = require('../../app/poll')
 
 describe('start polling', () => {
+  beforeEach(() => {
+    config.pollingInterval = 1000
+    config.pollingActive = true
+  })
+
   afterEach(() => {
     jest.clearAllMocks()
   })
@@ -42,5 +48,17 @@ describe('start polling', () => {
     pollInbound.mockRejectedValue(new Error('Verify issue'))
     await poll.start()
     expect(setTimeout).toHaveBeenCalled()
+  })
+
+  test('should call setTimeout once when polling is disabled', async () => {
+    config.pollingActive = false
+    await poll.start()
+    expect(setTimeout).toHaveBeenCalledTimes(1)
+  })
+
+  test('should not call pollInbound when polling is disabled', async () => {
+    config.pollingActive = false
+    await poll.start()
+    expect(pollInbound).toHaveBeenCalledTimes(0)
   })
 })
