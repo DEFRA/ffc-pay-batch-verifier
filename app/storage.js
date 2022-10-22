@@ -27,10 +27,12 @@ const initialiseContainers = async () => {
 }
 
 const initialiseFolders = async () => {
+  console.log('Making sure folders exist')
   const placeHolderText = 'Placeholder'
   const inboundClient = container.getBlockBlobClient(`${config.inboundFolder}/default.txt`)
   await inboundClient.upload(placeHolderText, placeHolderText.length)
   foldersInitialised = true
+  console.log('Folders ready')
 }
 
 const getBlob = async (folder, filename) => {
@@ -51,8 +53,8 @@ const getInboundFileList = async () => {
   containersInitialised ?? await initialiseContainers()
 
   const fileList = []
-  for await (const file of container.listBlobsFlat({ prefix: config.inboundFolder })) {
-    if (file.name.startsWith(`${config.inboundFolder}/CTL_PENDING_`) && file.name.endsWith('.dat')) {
+  for await (const file of container.listBlobsFlat({ prefix: `${config.inboundFolder}/CTL_PENDING_` })) {
+    if (file.name.endsWith('.dat')) {
       fileList.push(file.name.replace(`${config.inboundFolder}/`, ''))
     }
   }
