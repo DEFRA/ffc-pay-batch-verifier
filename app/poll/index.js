@@ -3,7 +3,9 @@ const pollInbound = require('./poll-inbound')
 
 const start = async () => {
   try {
-    await pollInbound()
+    if (config.pollingActive) {
+      await pollInbound()
+    }
   } catch (err) {
     console.error(err)
   } finally {
