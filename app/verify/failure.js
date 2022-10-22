@@ -1,4 +1,4 @@
-const storage = require('../../storage')
+const storage = require('../storage')
 
 const failure = async (pendingFilenames) => {
   console.log('Quarantining files')

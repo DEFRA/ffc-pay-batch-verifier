@@ -2,7 +2,7 @@ const crypto = require('crypto')
 const { BlobServiceClient } = require('@azure/storage-blob')
 jest.mock('../../app/config/verify', () => ({ totalRetries: 1 }))
 const storageConfig = require('../../app/config/storage')
-const pollInbound = require('../../app/poll/poll-inbound')
+const pollInbound = require('../../app/polling/poll-inbound')
 
 let blobServiceClient
 let container

@@ -1,5 +1,5 @@
-jest.mock('../../app/poll')
-const poll = require('../../app/poll')
+jest.mock('../../app/polling')
+const poll = require('../../app/polling')
 
 describe('app', () => {
   beforeEach(() => {

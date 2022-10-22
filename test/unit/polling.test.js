@@ -4,10 +4,10 @@ jest.spyOn(global, 'setTimeout')
 const config = require('../../app/config/verify')
 jest.mock('../../app/config/verify')
 
-jest.mock('../../app/poll/poll-inbound')
-const pollInbound = require('../../app/poll/poll-inbound')
+jest.mock('../../app/polling/poll-inbound')
+const pollInbound = require('../../app/polling/poll-inbound')
 
-const poll = require('../../app/poll')
+const poll = require('../../app/polling')
 
 describe('start polling', () => {
   beforeEach(() => {
