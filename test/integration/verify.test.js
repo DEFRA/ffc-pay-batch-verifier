@@ -38,19 +38,19 @@ const getBlobs = async (folder) => {
   let directory
   switch (folder) {
     case ARCHIVE:
-      directory = storageConfig.archive
+      directory = storageConfig.archiveFolder
       break
     case QUARANTINE:
-      directory = storageConfig.quarantine
+      directory = storageConfig.quarantineFolder
       break
     default:
-      directory = storageConfig.inbound
+      directory = storageConfig.inboundFolder
       break
   }
 
   const fileList = []
   for await (const item of container.listBlobsFlat({ prefix: directory })) {
-    fileList.push(item.name.replace(`${directory}/`, ''))
+    fileList.push(item.name.replace(`${directory}/`, EMPTY_CONTENT))
   }
   return fileList
 }
@@ -79,15 +79,121 @@ describe('verify batch content', () => {
 
   test('renames and archives batch control file on success if all files present and hash valid', async () => {
     await uploadBlob(ORIGINAL_BATCH_BLOB_NAME, VALID_CONTENT)
-    await uploadBlob(ORIGINAL_CTL_BATCH_BLOB_NAME, '')
+    await uploadBlob(ORIGINAL_CTL_BATCH_BLOB_NAME, EMPTY_CONTENT)
     await uploadBlob(ORIGINAL_CHECKSUM_BLOB_NAME, VALID_HASH)
-    await uploadBlob(ORIGINAL_CTL_CHECKSUM_BLOB_NAME, '')
+    await uploadBlob(ORIGINAL_CTL_CHECKSUM_BLOB_NAME, EMPTY_CONTENT)
 
     await pollInbound()
 
     const files = await getBlobs(ARCHIVE)
 
     expect(files.filter(x => x === PROCESSED_CTL_BATCH_BLOB_NAME).length).toBe(1)
+  })
+
+  test('renames and archives checksum file on success if all files present and hash valid', async () => {
+    await uploadBlob(ORIGINAL_BATCH_BLOB_NAME, VALID_CONTENT)
+    await uploadBlob(ORIGINAL_CTL_BATCH_BLOB_NAME, EMPTY_CONTENT)
+    await uploadBlob(ORIGINAL_CHECKSUM_BLOB_NAME, VALID_HASH)
+    await uploadBlob(ORIGINAL_CTL_CHECKSUM_BLOB_NAME, EMPTY_CONTENT)
+
+    await pollInbound()
+
+    const files = await getBlobs(ARCHIVE)
+
+    expect(files.filter(x => x === PROCESSED_CHECKSUM_BLOB_NAME).length).toBe(1)
+  })
+
+  test('renames and archives checksum control file on success if all files present and hash valid', async () => {
+    await uploadBlob(ORIGINAL_BATCH_BLOB_NAME, VALID_CONTENT)
+    await uploadBlob(ORIGINAL_CTL_BATCH_BLOB_NAME, EMPTY_CONTENT)
+    await uploadBlob(ORIGINAL_CHECKSUM_BLOB_NAME, VALID_HASH)
+    await uploadBlob(ORIGINAL_CTL_CHECKSUM_BLOB_NAME, EMPTY_CONTENT)
+
+    await pollInbound()
+
+    const files = await getBlobs(ARCHIVE)
+
+    expect(files.filter(x => x === PROCESSED_CTL_CHECKSUM_BLOB_NAME).length).toBe(1)
+  })
+
+  test('quarantines batch file on failure if all files present and hash invalid', async () => {
+    await uploadBlob(ORIGINAL_BATCH_BLOB_NAME, INVALID_CONTENT)
+    await uploadBlob(ORIGINAL_CTL_BATCH_BLOB_NAME, EMPTY_CONTENT)
+    await uploadBlob(ORIGINAL_CHECKSUM_BLOB_NAME, VALID_HASH)
+    await uploadBlob(ORIGINAL_CTL_CHECKSUM_BLOB_NAME, EMPTY_CONTENT)
+
+    await pollInbound()
+
+    const files = await getBlobs(QUARANTINE)
+
+    expect(files.filter(x => x === ORIGINAL_BATCH_BLOB_NAME).length).toBe(1)
+  })
+
+  test('quarantines batch control file on failure if all files present and hash invalid', async () => {
+    await uploadBlob(ORIGINAL_BATCH_BLOB_NAME, INVALID_CONTENT)
+    await uploadBlob(ORIGINAL_CTL_BATCH_BLOB_NAME, EMPTY_CONTENT)
+    await uploadBlob(ORIGINAL_CHECKSUM_BLOB_NAME, VALID_HASH)
+    await uploadBlob(ORIGINAL_CTL_CHECKSUM_BLOB_NAME, EMPTY_CONTENT)
+
+    await pollInbound()
+
+    const files = await getBlobs(QUARANTINE)
+
+    expect(files.filter(x => x === ORIGINAL_CTL_BATCH_BLOB_NAME).length).toBe(1)
+  })
+
+  test('quarantines checksum file on failure if all files present and hash invalid', async () => {
+    await uploadBlob(ORIGINAL_BATCH_BLOB_NAME, INVALID_CONTENT)
+    await uploadBlob(ORIGINAL_CTL_BATCH_BLOB_NAME, EMPTY_CONTENT)
+    await uploadBlob(ORIGINAL_CHECKSUM_BLOB_NAME, VALID_HASH)
+    await uploadBlob(ORIGINAL_CTL_CHECKSUM_BLOB_NAME, EMPTY_CONTENT)
+
+    await pollInbound()
+
+    const files = await getBlobs(QUARANTINE)
+
+    expect(files.filter(x => x === ORIGINAL_CHECKSUM_BLOB_NAME).length).toBe(1)
+  })
+
+  test('quarantines checksum control file on failure if all files present and hash invalid', async () => {
+    await uploadBlob(ORIGINAL_BATCH_BLOB_NAME, INVALID_CONTENT)
+    await uploadBlob(ORIGINAL_CTL_BATCH_BLOB_NAME, EMPTY_CONTENT)
+    await uploadBlob(ORIGINAL_CHECKSUM_BLOB_NAME, VALID_HASH)
+    await uploadBlob(ORIGINAL_CTL_CHECKSUM_BLOB_NAME, EMPTY_CONTENT)
+
+    await pollInbound()
+
+    const files = await getBlobs(QUARANTINE)
+
+    expect(files.filter(x => x === ORIGINAL_CTL_CHECKSUM_BLOB_NAME).length).toBe(1)
+  })
+
+  test('does not rename or move any file if batch control file missing and hash valid', async () => {
+    await uploadBlob(ORIGINAL_BATCH_BLOB_NAME, VALID_CONTENT)
+    await uploadBlob(ORIGINAL_CHECKSUM_BLOB_NAME, VALID_HASH)
+    await uploadBlob(ORIGINAL_CTL_CHECKSUM_BLOB_NAME, EMPTY_CONTENT)
+
+    await pollInbound()
+
+    const files = await getBlobs(INBOUND)
+
+    expect(files.filter(x => x === ORIGINAL_BATCH_BLOB_NAME).length).toBe(1)
+    expect(files.filter(x => x === ORIGINAL_CHECKSUM_BLOB_NAME).length).toBe(1)
+    expect(files.filter(x => x === ORIGINAL_CTL_CHECKSUM_BLOB_NAME).length).toBe(1)
+  })
+
+  test('does not rename or move any file if batch file missing', async () => {
+    await uploadBlob(ORIGINAL_CTL_BATCH_BLOB_NAME, EMPTY_CONTENT)
+    await uploadBlob(ORIGINAL_CHECKSUM_BLOB_NAME, VALID_HASH)
+    await uploadBlob(ORIGINAL_CTL_CHECKSUM_BLOB_NAME, EMPTY_CONTENT)
+
+    await pollInbound()
+
+    const files = await getBlobs(INBOUND)
+
+    expect(files.filter(x => x === ORIGINAL_CTL_BATCH_BLOB_NAME).length).toBe(1)
+    expect(files.filter(x => x === ORIGINAL_CHECKSUM_BLOB_NAME).length).toBe(1)
+    expect(files.filter(x => x === ORIGINAL_CTL_CHECKSUM_BLOB_NAME).length).toBe(1)
   })
 
   // test('ignores unrelated file', async () => {F
