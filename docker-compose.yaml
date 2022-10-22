@@ -7,6 +7,7 @@ services:
     container_name: ffc-pay-batch-verifier
     environment:
       APPINSIGHTS_CLOUDROLE: ffc-pay-batch-verifier-local
+      APPINSIGHTS_INSTRUMENTATIONKEY: ${APPINSIGHTS_INSTRUMENTATIONKEY}
       AZURE_STORAGE_ACCOUNT_NAME: ${AZURE_STORAGE_ACCOUNT_NAME:-devstoreaccount1}
       AZURE_STORAGE_USE_CONNECTION_STRING: "true"
       AZURE_STORAGE_CREATE_CONTAINERS: "true"
