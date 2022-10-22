@@ -1,5 +1,6 @@
 const crypto = require('crypto')
 const { BlobServiceClient } = require('@azure/storage-blob')
+jest.mock('../../app/config/verify', () => ({ totalRetries: 1 }))
 const storageConfig = require('../../app/config/storage')
 const pollInbound = require('../../app/poll/poll-inbound')
 
@@ -182,43 +183,109 @@ describe('verify batch content', () => {
     expect(files.filter(x => x === ORIGINAL_CTL_CHECKSUM_BLOB_NAME).length).toBe(1)
   })
 
-  test('does not rename or move any file if batch file missing', async () => {
+  test('throws error if batch file missing', async () => {
+    await uploadBlob(ORIGINAL_CTL_BATCH_BLOB_NAME, EMPTY_CONTENT)
+    await uploadBlob(ORIGINAL_CHECKSUM_BLOB_NAME, VALID_HASH)
+    await uploadBlob(ORIGINAL_CTL_CHECKSUM_BLOB_NAME, EMPTY_CONTENT)
+
+    await expect(pollInbound()).rejects.toThrow()
+  })
+
+  test('throws error if checksum file missing', async () => {
+    await uploadBlob(ORIGINAL_BATCH_BLOB_NAME, VALID_CONTENT)
+    await uploadBlob(ORIGINAL_CTL_BATCH_BLOB_NAME, EMPTY_CONTENT)
+    await uploadBlob(ORIGINAL_CTL_CHECKSUM_BLOB_NAME, EMPTY_CONTENT)
+
+    await expect(pollInbound()).rejects.toThrow()
+  })
+
+  test('throws error if checksum control file missing', async () => {
+    await uploadBlob(ORIGINAL_BATCH_BLOB_NAME, VALID_CONTENT)
+    await uploadBlob(ORIGINAL_CTL_BATCH_BLOB_NAME, EMPTY_CONTENT)
+    await uploadBlob(ORIGINAL_CHECKSUM_BLOB_NAME, VALID_HASH)
+
+    await expect(pollInbound()).rejects.toThrow()
+  })
+
+  test('quarantines all files if batch file empty', async () => {
+    await uploadBlob(ORIGINAL_BATCH_BLOB_NAME, EMPTY_CONTENT)
     await uploadBlob(ORIGINAL_CTL_BATCH_BLOB_NAME, EMPTY_CONTENT)
     await uploadBlob(ORIGINAL_CHECKSUM_BLOB_NAME, VALID_HASH)
     await uploadBlob(ORIGINAL_CTL_CHECKSUM_BLOB_NAME, EMPTY_CONTENT)
 
     await pollInbound()
 
-    const files = await getBlobs(INBOUND)
+    const files = await getBlobs(QUARANTINE)
 
+    expect(files.filter(x => x === ORIGINAL_BATCH_BLOB_NAME).length).toBe(1)
     expect(files.filter(x => x === ORIGINAL_CTL_BATCH_BLOB_NAME).length).toBe(1)
     expect(files.filter(x => x === ORIGINAL_CHECKSUM_BLOB_NAME).length).toBe(1)
     expect(files.filter(x => x === ORIGINAL_CTL_CHECKSUM_BLOB_NAME).length).toBe(1)
   })
 
-  // test('ignores unrelated file', async () => {F
-  //   const blockBlobClient = container.getBlockBlobClient(`${storageConfig.inbound}/ignore me.dat`)
-  //   await blockBlobClient.uploadFile(TEST_FILEPATH_SFI_PILOT)
+  test('quarantines all files if checksum file empty', async () => {
+    await uploadBlob(ORIGINAL_BATCH_BLOB_NAME, VALID_CONTENT)
+    await uploadBlob(ORIGINAL_CTL_BATCH_BLOB_NAME, EMPTY_CONTENT)
+    await uploadBlob(ORIGINAL_CHECKSUM_BLOB_NAME, EMPTY_CONTENT)
+    await uploadBlob(ORIGINAL_CTL_CHECKSUM_BLOB_NAME, EMPTY_CONTENT)
 
-  //   await pollInbound()
+    await pollInbound()
 
-  //   const fileList = []
-  //   for await (const item of container.listBlobsFlat()) {
-  //     fileList.push(item.name)
-  //   }
-  //   expect(fileList.filter(x => x === `${storageConfig.inbound}/ignore me.dat`).length).toBe(1)
-  // })
+    const files = await getBlobs(QUARANTINE)
 
-  // test('quarantines invalid batch header number of payment requests to actual number of payment requests for SFI Pilot', async () => {
-  //   const blockBlobClient = container.getBlockBlobClient(`${storageConfig.inboundFolder}/${TEST_INVALID_BATCH_HEADER_NUMBER_OF_PAYMENT_REQUESTS_TO_ACTUAL_NUMBER_OF_PAYMENT_REQUESTS_FILE_SFI_PILOT}`)
-  //   await blockBlobClient.uploadFile(TEST_INVALID_BATCH_HEADER_NUMBER_OF_PAYMENT_REQUESTS_TO_ACTUAL_NUMBER_OF_PAYMENT_REQUESTS_FILEPATH_SFI_PILOT)
+    expect(files.filter(x => x === ORIGINAL_BATCH_BLOB_NAME).length).toBe(1)
+    expect(files.filter(x => x === ORIGINAL_CTL_BATCH_BLOB_NAME).length).toBe(1)
+    expect(files.filter(x => x === ORIGINAL_CHECKSUM_BLOB_NAME).length).toBe(1)
+    expect(files.filter(x => x === ORIGINAL_CTL_CHECKSUM_BLOB_NAME).length).toBe(1)
+  })
 
-  //   await pollInbound()
+  test('ignores already processed control file', async () => {
+    await uploadBlob(PROCESSED_CTL_BATCH_BLOB_NAME, EMPTY_CONTENT)
 
-  //   const fileList = []
-  //   for await (const item of container.listBlobsFlat({ prefix: storageConfig.quarantineFolder })) {
-  //     fileList.push(item.name)
-  //   }
-  //   expect(fileList.filter(x => x === `${storageConfig.quarantineFolder}/${TEST_INVALID_BATCH_HEADER_NUMBER_OF_PAYMENT_REQUESTS_TO_ACTUAL_NUMBER_OF_PAYMENT_REQUESTS_FILE_SFI_PILOT}`).length).toBe(1)
-  // })
+    await pollInbound()
+
+    const files = await getBlobs(INBOUND)
+
+    expect(files.filter(x => x === PROCESSED_CTL_BATCH_BLOB_NAME).length).toBe(1)
+  })
+
+  test('ignores already processed checksum control file', async () => {
+    await uploadBlob(PROCESSED_CTL_CHECKSUM_BLOB_NAME, EMPTY_CONTENT)
+
+    await pollInbound()
+
+    const files = await getBlobs(INBOUND)
+
+    expect(files.filter(x => x === PROCESSED_CTL_CHECKSUM_BLOB_NAME).length).toBe(1)
+  })
+
+  test('ignores already processed batch file', async () => {
+    await uploadBlob(PROCESSED_BATCH_BLOB_NAME, VALID_CONTENT)
+
+    await pollInbound()
+
+    const files = await getBlobs(INBOUND)
+
+    expect(files.filter(x => x === PROCESSED_BATCH_BLOB_NAME).length).toBe(1)
+  })
+
+  test('ignores already processed checksum file', async () => {
+    await uploadBlob(PROCESSED_CHECKSUM_BLOB_NAME, VALID_HASH)
+
+    await pollInbound()
+
+    const files = await getBlobs(INBOUND)
+
+    expect(files.filter(x => x === PROCESSED_CHECKSUM_BLOB_NAME).length).toBe(1)
+  })
+
+  test('ignores unknown file', async () => {
+    await uploadBlob('UNKNOWN_BLOB_NAME', VALID_CONTENT)
+
+    await pollInbound()
+
+    const files = await getBlobs(INBOUND)
+
+    expect(files.filter(x => x === 'UNKNOWN_BLOB_NAME').length).toBe(1)
+  })
 })
