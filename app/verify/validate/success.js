@@ -1,4 +1,4 @@
-const storage = require('../storage')
+const storage = require('../../storage')
 
 const success = async (pendingFilenames, processedFilenames) => {
   console.log('Renaming files')

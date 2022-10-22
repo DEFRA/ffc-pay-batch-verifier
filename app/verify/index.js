@@ -1,5 +1,5 @@
 const { getPendingFilenames, getProcessedFilenames } = require('./filenames')
-const validate = require('../validate')
+const validate = require('./validate')
 
 const verifyBatch = async (batchFilename) => {
   const pendingFilenames = getPendingFilenames(batchFilename)

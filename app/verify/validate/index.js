@@ -1,5 +1,5 @@
 const { verifyContent } = require('./verify')
-const getFiles = require('../get-files')
+const getFiles = require('./get-files')
 const success = require('./success')
 const failure = require('./failure')
 

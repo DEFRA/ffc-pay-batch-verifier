@@ -1,5 +1,5 @@
-const retry = require('./retry')
-const storage = require('./storage')
+const retry = require('../../retry')
+const storage = require('../../storage')
 
 const getFiles = async (pendingFilenames) => {
   // ensure we also have a control file for checksum before continuing
