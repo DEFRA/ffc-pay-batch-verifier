@@ -3,15 +3,17 @@ jest.mock('../../app/config/verify', () => ({ totalRetries: 1 }))
 
 const ORIGINAL_CTL_BATCH_FILE_NAME = 'CTL_PENDING_TEST_BATCH.dat'
 
-const ORIGINAL_BATCH_BLOB_NAME = 'PENDING_TEST_BATCH.dat'
-const ORIGINAL_CTL_BATCH_BLOB_NAME = 'CTL_PENDING_TEST_BATCH.dat'
-const ORIGINAL_CHECKSUM_BLOB_NAME = 'PENDING_TEST_BATCH.txt'
-const ORIGINAL_CTL_CHECKSUM_BLOB_NAME = 'CTL_PENDING_TEST_BATCH.txt'
+const DEFAULT_BLOB_NAME = 'inbound/default.txt'
 
-const PROCESSED_BATCH_BLOB_NAME = 'TEST_BATCH.dat'
-const PROCESSED_CTL_BATCH_BLOB_NAME = 'CTL_TEST_BATCH.dat'
-const PROCESSED_CHECKSUM_BLOB_NAME = 'TEST_BATCH.txt'
-const PROCESSED_CTL_CHECKSUM_BLOB_NAME = 'CTL_TEST_BATCH.txt'
+const ORIGINAL_BATCH_BLOB_NAME = 'inbound/PENDING_TEST_BATCH.dat'
+const ORIGINAL_CTL_BATCH_BLOB_NAME = 'inbound/CTL_PENDING_TEST_BATCH.dat'
+const ORIGINAL_CHECKSUM_BLOB_NAME = 'inbound/PENDING_TEST_BATCH.txt'
+const ORIGINAL_CTL_CHECKSUM_BLOB_NAME = 'inbound/CTL_PENDING_TEST_BATCH.txt'
+
+const PROCESSED_BATCH_BLOB_NAME = 'inbound/TEST_BATCH.dat'
+const PROCESSED_CTL_BATCH_BLOB_NAME = 'inbound/CTL_TEST_BATCH.dat'
+const PROCESSED_CHECKSUM_BLOB_NAME = 'inbound/TEST_BATCH.txt'
+const PROCESSED_CTL_CHECKSUM_BLOB_NAME = 'inbound/CTL_TEST_BATCH.txt'
 
 const ARCHIVE_BATCH_BLOB_NAME = 'archive/TEST_BATCH.dat'
 const ARCHIVE_CTL_BATCH_BLOB_NAME = 'archive/CTL_TEST_BATCH.dat'
@@ -27,6 +29,7 @@ const createHash = (content) => {
   return crypto.createHash('sha256').update(content).digest('hex')
 }
 
+let mockDefaultBlob
 let mockOriginalBatchBlob
 let mockOriginalCtlBatchBlob
 let mockOriginalChecksumBlob
@@ -51,7 +54,8 @@ const mockGetContainerClient = jest.fn()
 const mockBatchBlob = {
   downloadToBuffer: mockDownloadToBuffer,
   beginCopyFromURL: mockBeginCopyFromURL,
-  delete: jest.fn()
+  delete: jest.fn(),
+  upload: jest.fn()
 }
 const mockBatchCtlBlob = {
   downloadToBuffer: jest.fn().mockResolvedValue(Buffer.from('')),
@@ -71,7 +75,8 @@ const mockChecksumCtlBlob = {
 }
 const mockGetBlobClient = jest.fn()
 const mockContainer = {
-  getBlockBlobClient: mockGetBlobClient
+  getBlockBlobClient: mockGetBlobClient,
+  createIfNotExists: jest.fn()
 }
 const mockBlobServiceClient = {
   getContainerClient: mockGetContainerClient.mockReturnValue(mockContainer)
@@ -101,6 +106,9 @@ describe('verification', () => {
   const setupBlobClientMocks = () => {
     mockGetBlobClient.mockImplementation((filename) => {
       switch (filename) {
+        case DEFAULT_BLOB_NAME:
+          mockDefaultBlob = getMockBlob(mockBatchBlob, 'default')
+          return mockDefaultBlob
         case ORIGINAL_BATCH_BLOB_NAME:
           mockOriginalBatchBlob = getMockBlob(mockBatchBlob, 'original')
           return mockOriginalBatchBlob
@@ -151,7 +159,7 @@ describe('verification', () => {
           return mockQuarantineCtlChecksumBlob
         default:
           console.log(filename)
-          throw new Error('Unexpected filename')
+          throw new Error('Unexpected filename:', filename)
       }
     })
   }
@@ -166,7 +174,7 @@ describe('verification', () => {
 
   test('should download all files associated with control file', async () => {
     setupFileContent(true)
-    await verify(ORIGINAL_CTL_BATCH_BLOB_NAME)
+    await verify(ORIGINAL_CTL_BATCH_FILE_NAME)
     expect(mockOriginalBatchBlob.downloadToBuffer).toHaveBeenCalledTimes(1)
     expect(mockOriginalChecksumBlob.downloadToBuffer).toHaveBeenCalledTimes(1)
     expect(mockOriginalCtlChecksumBlob.downloadToBuffer).toHaveBeenCalledTimes(1)
@@ -174,7 +182,7 @@ describe('verification', () => {
 
   test('should rename all files on success', async () => {
     setupFileContent(true)
-    await verify(ORIGINAL_CTL_BATCH_BLOB_NAME)
+    await verify(ORIGINAL_CTL_BATCH_FILE_NAME)
     expect(mockProcessedBatchBlob.beginCopyFromURL).toHaveBeenCalledWith(mockOriginalBatchBlob.url)
     expect(mockProcessedCtlBatchBlob.beginCopyFromURL).toHaveBeenCalledWith(mockOriginalCtlBatchBlob.url)
     expect(mockProcessedChecksumBlob.beginCopyFromURL).toHaveBeenCalledWith(mockOriginalChecksumBlob.url)
@@ -183,7 +191,7 @@ describe('verification', () => {
 
   test('should control files and checksum on success', async () => {
     setupFileContent(true)
-    await verify(ORIGINAL_CTL_BATCH_BLOB_NAME)
+    await verify(ORIGINAL_CTL_BATCH_FILE_NAME)
     expect(mockArchiveCtlBatchBlob.beginCopyFromURL).toHaveBeenCalledWith(mockProcessedCtlBatchBlob.url)
     expect(mockArchiveChecksumBlob.beginCopyFromURL).toHaveBeenCalledWith(mockProcessedChecksumBlob.url)
     expect(mockArchiveCtlChecksumBlob.beginCopyFromURL).toHaveBeenCalledWith(mockProcessedCtlChecksumBlob.url)
@@ -191,7 +199,7 @@ describe('verification', () => {
 
   test('should quarantine files on failure', async () => {
     setupFileContent(false)
-    await verify(ORIGINAL_CTL_BATCH_BLOB_NAME)
+    await verify(ORIGINAL_CTL_BATCH_FILE_NAME)
     expect(mockQuarantineBatchBlob.beginCopyFromURL).toHaveBeenCalledWith(mockOriginalBatchBlob.url)
     expect(mockQuarantineCtlBatchBlob.beginCopyFromURL).toHaveBeenCalledWith(mockOriginalCtlBatchBlob.url)
     expect(mockQuarantineChecksumBlob.beginCopyFromURL).toHaveBeenCalledWith(mockOriginalChecksumBlob.url)
@@ -200,16 +208,16 @@ describe('verification', () => {
 
   test('should throw error if batch file missing', async () => {
     mockOriginalBatchBlob.downloadToBuffer.mockImplementation(() => { throw new Error() })
-    await expect(verify(ORIGINAL_CTL_BATCH_BLOB_NAME)).rejects.toThrow()
+    await expect(verify(ORIGINAL_CTL_BATCH_FILE_NAME)).rejects.toThrow()
   })
 
   test('should throw error if checksum file missing', async () => {
     mockOriginalChecksumBlob.downloadToBuffer.mockImplementation(() => { throw new Error() })
-    await expect(verify(ORIGINAL_CTL_BATCH_BLOB_NAME)).rejects.toThrow()
+    await expect(verify(ORIGINAL_CTL_BATCH_FILE_NAME)).rejects.toThrow()
   })
 
   test('should throw error if checksum control file missing', async () => {
     mockOriginalCtlChecksumBlob.downloadToBuffer.mockImplementation(() => { throw new Error() })
-    await expect(verify(ORIGINAL_CTL_BATCH_BLOB_NAME)).rejects.toThrow()
+    await expect(verify(ORIGINAL_CTL_BATCH_FILE_NAME)).rejects.toThrow()
   })
 })
