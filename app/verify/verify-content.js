@@ -14,6 +14,4 @@ const verifyContent = (content, hash) => {
   return isValid
 }
 
-module.exports = {
-  verifyContent
-}
+module.exports = verifyContent
