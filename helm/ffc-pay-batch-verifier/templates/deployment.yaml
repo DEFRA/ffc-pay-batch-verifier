@@ -1,0 +1,8 @@
+{{- include "ffc-helm-library.deployment" (list . "ffc-pay-batch-verifier.deployment") -}}
+{{- define "ffc-pay-batch-verifier.deployment" -}}
+spec:
+  template:
+    spec:
+      containers:
+      - {{ include "ffc-helm-library.container" (list . "ffc-pay-batch-verifier.container") }}
+{{- end -}}

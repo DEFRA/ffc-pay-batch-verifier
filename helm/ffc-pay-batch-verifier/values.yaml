@@ -1,0 +1,43 @@
+environment: development
+environmentCode:
+name: ffc-pay-batch-verifier
+namespace: ffc-pay
+workstream: ffc-pay
+image: ffc-pay-batch-verifier
+
+labels: {}
+
+appInsights:
+  key:
+
+containerConfigMap:
+  name: ffc-pay-batch-verifier-config-map
+
+containerSecret:
+  name: ffc-pay-batch-verifier-container-secret
+  type: Opaque
+
+deployment:
+  restartPolicy: Always
+  priorityClassName: default
+  replicas: 1
+  minReadySeconds: 0
+
+container:
+  imagePullPolicy: Always
+  requestMemory: 100Mi
+  requestCpu: 60m
+  limitMemory: 200Mi
+  limitCpu: 200m
+  azureStorageAccountName: ffcpay
+  azureStorageConnectionString: dummy
+  azureStorageUseConnectionString: false
+  azureStorageCreateContainers: false
+  pollingInterval: 10000
+  pollingActive: true
+
+aadPodIdentity: true
+
+azureIdentity:
+  clientID: not-a-real-clientID
+  resourceID: not-a-real-resourceID

@@ -1,0 +1,2 @@
+{{- define "ffc-pay-batch-verifier.container" -}}
+{{- end -}}
