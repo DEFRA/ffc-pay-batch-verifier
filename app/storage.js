@@ -49,7 +49,7 @@ const getFile = async (filename) => {
   return downloaded.toString()
 }
 
-const getInboundFileList = async () => {
+const getPendingControlFiles = async () => {
   containersInitialised ?? await initialiseContainers()
 
   const fileList = []
@@ -95,7 +95,7 @@ const sanitizeFilename = (filename) => {
 }
 
 module.exports = {
-  getInboundFileList,
+  getPendingControlFiles,
   getFile,
   renameFile,
   archiveFile,

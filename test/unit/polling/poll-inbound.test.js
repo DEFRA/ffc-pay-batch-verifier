@@ -13,7 +13,7 @@ describe('poll inbound', () => {
   beforeEach(() => {
     jest.clearAllMocks()
 
-    mockStorage.getInboundFileList.mockResolvedValue([
+    mockStorage.getPendingControlFiles.mockResolvedValue([
       FILE_NAME_1,
       FILE_NAME_2
     ])
@@ -21,7 +21,7 @@ describe('poll inbound', () => {
 
   test('should get inbound file list', async () => {
     await pollInbound()
-    expect(mockStorage.getInboundFileList).toHaveBeenCalled()
+    expect(mockStorage.getPendingControlFiles).toHaveBeenCalled()
   })
 
   test('should call verify batch for each file', async () => {
@@ -36,7 +36,7 @@ describe('poll inbound', () => {
   })
 
   test('should throw an error if inbound file list cannot be retrieved', async () => {
-    mockStorage.getInboundFileList.mockRejectedValueOnce(new Error('not found'))
+    mockStorage.getPendingControlFiles.mockRejectedValueOnce(new Error('not found'))
     await expect(pollInbound()).rejects.toThrow('not found')
   })
 
@@ -46,7 +46,7 @@ describe('poll inbound', () => {
   })
 
   test('should not call verify batch if no files', async () => {
-    mockStorage.getInboundFileList.mockResolvedValue([])
+    mockStorage.getPendingControlFiles.mockResolvedValue([])
     await pollInbound()
     expect(mockVerify).not.toHaveBeenCalled()
   })

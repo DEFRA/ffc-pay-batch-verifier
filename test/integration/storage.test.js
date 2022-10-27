@@ -22,7 +22,7 @@ describe('Blob storage tests', () => {
   })
 
   test('List files in inbound blob container', async () => {
-    const fileList = await blobStorage.getInboundFileList()
+    const fileList = await blobStorage.getPendingControlFiles()
     expect(fileList).toEqual(expect.arrayContaining(mockFileList))
   })
 
@@ -33,7 +33,7 @@ describe('Blob storage tests', () => {
 
   test('Copy blob from inbound to archive container', async () => {
     const result = await blobStorage.archiveFile(mockFileList[0])
-    const fileList = await blobStorage.getInboundFileList()
+    const fileList = await blobStorage.getPendingControlFiles()
 
     expect(result).toEqual(true)
     expect(fileList.length).toEqual(mockFileList.length - 1)
