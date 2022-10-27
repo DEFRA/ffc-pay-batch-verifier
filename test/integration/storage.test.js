@@ -1,12 +1,13 @@
-describe('Blob storage tests', () => {
-  let blobServiceClient
-  let container
-  const { BlobServiceClient } = require('@azure/storage-blob')
-  const blobStorage = require('../../app/storage')
-  const blobStorageConfig = require('../../app/config/storage')
-  const mockFileList = ['CTL_PENDING_test1.dat', 'CTL_PENDING_test2.dat']
-  const testFileContents = 'This is a test file'
+const { BlobServiceClient } = require('@azure/storage-blob')
+const blobStorage = require('../../app/storage')
+const blobStorageConfig = require('../../app/config/storage')
+const mockFileList = ['CTL_PENDING_test1.dat', 'CTL_PENDING_test2.dat']
+const testFileContents = 'This is a test file'
 
+let blobServiceClient
+let container
+
+describe('Blob storage tests', () => {
   beforeEach(async () => {
     blobServiceClient = BlobServiceClient.fromConnectionString(blobStorageConfig.connectionStr)
     container = blobServiceClient.getContainerClient(blobStorageConfig.container)
