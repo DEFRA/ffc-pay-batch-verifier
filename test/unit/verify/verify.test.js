@@ -1,4 +1,4 @@
-const crypto = require('crypto')
+const createHash = require('../../../app/verify/create-hash')
 jest.mock('../../../app/config/verify', () => ({ totalRetries: 1 }))
 
 const ORIGINAL_CTL_BATCH_FILE_NAME = 'CTL_PENDING_TEST_BATCH.dat'
@@ -24,10 +24,6 @@ const QUARANTINE_BATCH_BLOB_NAME = 'quarantine/PENDING_TEST_BATCH.dat'
 const QUARANTINE_CTL_BATCH_BLOB_NAME = 'quarantine/CTL_PENDING_TEST_BATCH.dat'
 const QUARANTINE_CHECKSUM_BLOB_NAME = 'quarantine/PENDING_TEST_BATCH.txt'
 const QUARANTINE_CTL_CHECKSUM_BLOB_NAME = 'quarantine/CTL_PENDING_TEST_BATCH.txt'
-
-const createHash = (content) => {
-  return crypto.createHash('sha256').update(content).digest('hex')
-}
 
 let mockDefaultBlob
 let mockOriginalBatchBlob

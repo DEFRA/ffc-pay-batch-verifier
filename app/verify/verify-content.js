@@ -1,18 +1,19 @@
-const crypto = require('crypto')
+const createHash = require('./create-hash')
+const verifyHash = require('./verify-hash')
 
 const verifyContent = (content, hash) => {
   try {
-    const fileHash = crypto.createHash('sha256').update(content).digest('hex')
-    const isValid = fileHash === hash
+    const contentHash = createHash(content)
 
-    if (isValid) {
+    if (verifyHash(contentHash, hash)) {
       console.log('File content successfully verified')
-    } else {
-      console.log('File verification failed')
-      console.log(`File hash: ${fileHash}`)
-      console.log(`Validation hash: ${hash}`)
+      return true
     }
-    return isValid
+
+    console.log('File verification failed')
+    console.log(`File hash: ${contentHash}`)
+    console.log(`Validation hash: ${hash}`)
+    return false
   } catch (err) {
     console.log('Error verifying content:', err)
     return false
