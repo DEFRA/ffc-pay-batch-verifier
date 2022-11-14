@@ -17,6 +17,9 @@ containerSecret:
   name: ffc-pay-batch-verifier-container-secret
   type: Opaque
 
+deployment:
+  replicas: 1
+
 container:
   requestMemory: 100Mi
   requestCpu: 60m
