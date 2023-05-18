@@ -1,5 +1,7 @@
 jest.mock('../../app/config/verify', () => ({ totalRetries: 1 }))
+
 const retry = require('../../app/retry')
+
 let mockFunction
 
 describe('retry', () => {
@@ -35,11 +37,35 @@ describe('retry', () => {
     expect(mockFunction).toHaveBeenCalledTimes(2)
   })
 
-  test('retries function call up to maximum retries', async () => {
+  test('retries function call with minimum retries and no exponential', async () => {
     mockFunction.mockRejectedValue('error')
     try {
-      await retry(mockFunction, 1)
+      await retry(mockFunction, 1, 0, false)
     } catch {}
     expect(mockFunction).toHaveBeenCalledTimes(2)
+  })
+
+  test('retries function call with maximum retries and no expontential', async () => {
+    mockFunction.mockRejectedValue('error')
+    try {
+      await retry(mockFunction, 30, 0, false)
+    } catch {}
+    expect(mockFunction).toHaveBeenCalledTimes(31)
+  })
+
+  test('retries function call with minimum retries and expontential', async () => {
+    mockFunction.mockRejectedValue('error')
+    try {
+      await retry(mockFunction, 1, 0, true)
+    } catch {}
+    expect(mockFunction).toHaveBeenCalledTimes(2)
+  })
+
+  test('retries function call with maximum retries and expontential', async () => {
+    mockFunction.mockRejectedValue('error')
+    try {
+      await retry(mockFunction, 30, 0, true)
+    } catch {}
+    expect(mockFunction).toHaveBeenCalledTimes(31)
   })
 })
