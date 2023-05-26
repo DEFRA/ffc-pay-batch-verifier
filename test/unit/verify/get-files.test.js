@@ -2,6 +2,7 @@ jest.mock('../../../app/storage')
 const mockStorage = require('../../../app/storage')
 jest.mock('../../../app/retry')
 const mockRetry = require('../../../app/retry')
+
 const getFiles = require('../../../app/verify/get-files')
 
 const PENDING_BATCH_BLOB_NAME = 'PENDING_TEST_BATCH.dat'

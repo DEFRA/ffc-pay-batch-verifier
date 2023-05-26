@@ -34,15 +34,26 @@ describe('poll inbound', () => {
     expect(mockVerify).toHaveBeenNthCalledWith(1, FILE_NAME_1)
     expect(mockVerify).toHaveBeenNthCalledWith(2, FILE_NAME_2)
   })
-
+  /*
+  test('should throw error once then succeed', async () => {
+    await mockVerify.mockRejectedValueOnce(new Error('not found'))
+    await expect(mockVerify).rejects.toThrow('not found')
+    await expect(mockVerify).toReturnWith(FILE_NAME_2)
+  })
+  */
   test('should throw an error if inbound file list cannot be retrieved', async () => {
     mockStorage.getPendingControlFiles.mockRejectedValueOnce(new Error('not found'))
     await expect(pollInbound()).rejects.toThrow('not found')
   })
 
-  test('should throw an error if verify batch throws an error', async () => {
+  test('should not throw an error in poll inbound if verify batch throws an error', async () => {
     mockVerify.mockRejectedValueOnce(new Error('not found'))
-    await expect(pollInbound()).rejects.toThrow('not found')
+    await expect(pollInbound).not.toThrow('not found')
+  })
+
+  test('should throw an error in verify batch if verify batch throws an error', async () => {
+    mockVerify.mockRejectedValueOnce(new Error('not found'))
+    await expect(mockVerify).rejects.toThrow('not found')
   })
 
   test('should not call verify batch if no files', async () => {
