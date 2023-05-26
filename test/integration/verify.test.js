@@ -6,7 +6,7 @@ const createHash = require('../../app/verify/create-hash')
 jest.mock('../../app/verify', () => {
   const originalModule = jest.requireActual('../../app/verify')
   return originalModule
-  })
+})
 const verifyBatch = require('../../app/verify')
 
 const storageConfig = require('../../app/config/storage')
@@ -76,7 +76,7 @@ describe('verify batch content', () => {
 
     blobServiceClient = BlobServiceClient.fromConnectionString(storageConfig.connectionStr)
     container = blobServiceClient.getContainerClient(storageConfig.container)
-    
+
     await container.deleteIfExists()
     await container.createIfNotExists()
   })
