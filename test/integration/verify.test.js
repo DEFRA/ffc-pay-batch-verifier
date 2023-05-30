@@ -1,11 +1,10 @@
 const { BlobServiceClient } = require('@azure/storage-blob')
+
 jest.mock('../../app/config/verify', () => ({ totalRetries: 1 }))
 const createHash = require('../../app/verify/create-hash')
+
 const storageConfig = require('../../app/config/storage')
 const pollInbound = require('../../app/polling/poll-inbound')
-
-let blobServiceClient
-let container
 
 const INBOUND = 'inbound'
 const ARCHIVE = 'archive'
@@ -21,10 +20,23 @@ const ORIGINAL_CTL_BATCH_BLOB_NAME = 'CTL_PENDING_TEST_BATCH.dat'
 const ORIGINAL_CHECKSUM_BLOB_NAME = 'PENDING_TEST_BATCH.txt'
 const ORIGINAL_CTL_CHECKSUM_BLOB_NAME = 'CTL_PENDING_TEST_BATCH.txt'
 
+const SECOND_BATCH_BLOB_NAME = 'PENDING_TEST_2_BATCH.dat'
+const SECOND_CTL_BATCH_BLOB_NAME = 'CTL_PENDING_TEST_2_BATCH.dat'
+const SECOND_CHECKSUM_BLOB_NAME = 'PENDING_TEST_2_BATCH.txt'
+const SECOND_CTL_CHECKSUM_BLOB_NAME = 'CTL_PENDING_TEST_2_BATCH.txt'
+
 const PROCESSED_BATCH_BLOB_NAME = 'TEST_BATCH.dat'
 const PROCESSED_CTL_BATCH_BLOB_NAME = 'CTL_TEST_BATCH.dat'
 const PROCESSED_CHECKSUM_BLOB_NAME = 'TEST_BATCH.txt'
 const PROCESSED_CTL_CHECKSUM_BLOB_NAME = 'CTL_TEST_BATCH.txt'
+
+const SECOND_PROCESSED_BATCH_BLOB_NAME = 'TEST_2_BATCH.dat'
+const SECOND_PROCESSED_CTL_BATCH_BLOB_NAME = 'CTL_TEST_2_BATCH.dat'
+const SECOND_PROCESSED_CHECKSUM_BLOB_NAME = 'TEST_2_BATCH.txt'
+const SECOND_PROCESSED_CTL_CHECKSUM_BLOB_NAME = 'CTL_TEST_2_BATCH.txt'
+
+let blobServiceClient
+let container
 
 const uploadBlob = async (blobName, content) => {
   const blockBlobClient = container.getBlockBlobClient(`${storageConfig.inboundFolder}/${blobName}`)
@@ -55,8 +67,10 @@ const getBlobs = async (folder) => {
 describe('verify batch content', () => {
   beforeEach(async () => {
     jest.clearAllMocks()
+
     blobServiceClient = BlobServiceClient.fromConnectionString(storageConfig.connectionStr)
     container = blobServiceClient.getContainerClient(storageConfig.container)
+
     await container.deleteIfExists()
     await container.createIfNotExists()
   })
@@ -179,28 +193,65 @@ describe('verify batch content', () => {
     expect(files.filter(x => x === ORIGINAL_CTL_CHECKSUM_BLOB_NAME).length).toBe(1)
   })
 
-  test('throws error if batch file missing', async () => {
+  test('poll inbound does not throw error if batch file missing', async () => {
     await uploadBlob(ORIGINAL_CTL_BATCH_BLOB_NAME, EMPTY_CONTENT)
     await uploadBlob(ORIGINAL_CHECKSUM_BLOB_NAME, VALID_HASH)
     await uploadBlob(ORIGINAL_CTL_CHECKSUM_BLOB_NAME, EMPTY_CONTENT)
 
-    await expect(pollInbound()).rejects.toThrow()
+    await expect(pollInbound).not.toThrow()
   })
 
-  test('throws error if checksum file missing', async () => {
+  test('poll inbound does not throw error if checksum file missing', async () => {
     await uploadBlob(ORIGINAL_BATCH_BLOB_NAME, VALID_CONTENT)
     await uploadBlob(ORIGINAL_CTL_BATCH_BLOB_NAME, EMPTY_CONTENT)
     await uploadBlob(ORIGINAL_CTL_CHECKSUM_BLOB_NAME, EMPTY_CONTENT)
 
-    await expect(pollInbound()).rejects.toThrow()
+    await expect(pollInbound).not.toThrow()
   })
 
-  test('throws error if checksum control file missing', async () => {
+  test('poll inbound does not throw error if checksum control file missing', async () => {
     await uploadBlob(ORIGINAL_BATCH_BLOB_NAME, VALID_CONTENT)
     await uploadBlob(ORIGINAL_CTL_BATCH_BLOB_NAME, EMPTY_CONTENT)
     await uploadBlob(ORIGINAL_CHECKSUM_BLOB_NAME, VALID_HASH)
 
-    await expect(pollInbound()).rejects.toThrow()
+    await expect(pollInbound).not.toThrow()
+  })
+
+  test('should not process any files of first batch if any files missing and renames and archives files of second batch', async () => {
+    await uploadBlob(ORIGINAL_BATCH_BLOB_NAME, VALID_CONTENT)
+    await uploadBlob(ORIGINAL_CTL_BATCH_BLOB_NAME, EMPTY_CONTENT)
+    await uploadBlob(ORIGINAL_CHECKSUM_BLOB_NAME, VALID_HASH)
+
+    await uploadBlob(SECOND_BATCH_BLOB_NAME, VALID_CONTENT)
+    await uploadBlob(SECOND_CTL_BATCH_BLOB_NAME, EMPTY_CONTENT)
+    await uploadBlob(SECOND_CHECKSUM_BLOB_NAME, VALID_HASH)
+    await uploadBlob(SECOND_CTL_CHECKSUM_BLOB_NAME, EMPTY_CONTENT)
+
+    await pollInbound()
+
+    const inboundFiles = await getBlobs(INBOUND)
+
+    const archivedFiles = await getBlobs(ARCHIVE)
+
+    expect(inboundFiles.filter(x => x === PROCESSED_BATCH_BLOB_NAME).length).toBe(0)
+    expect(inboundFiles.filter(x => x === SECOND_PROCESSED_BATCH_BLOB_NAME).length).toBe(1)
+    expect(archivedFiles.filter(x => x === SECOND_PROCESSED_CTL_BATCH_BLOB_NAME).length).toBe(1)
+    expect(archivedFiles.filter(x => x === SECOND_PROCESSED_CHECKSUM_BLOB_NAME).length).toBe(1)
+    expect(archivedFiles.filter(x => x === SECOND_PROCESSED_CTL_CHECKSUM_BLOB_NAME).length).toBe(1)
+  })
+
+  test('should not process any files from batch with missing files', async () => {
+    await uploadBlob(ORIGINAL_BATCH_BLOB_NAME, VALID_CONTENT)
+    await uploadBlob(ORIGINAL_CTL_BATCH_BLOB_NAME, EMPTY_CONTENT)
+    await uploadBlob(ORIGINAL_CHECKSUM_BLOB_NAME, VALID_HASH)
+
+    await pollInbound()
+
+    const inboundFiles = await getBlobs(INBOUND)
+
+    expect(inboundFiles.filter(x => x === ORIGINAL_BATCH_BLOB_NAME).length).toBe(1)
+    expect(inboundFiles.filter(x => x === ORIGINAL_CTL_BATCH_BLOB_NAME).length).toBe(1)
+    expect(inboundFiles.filter(x => x === ORIGINAL_CHECKSUM_BLOB_NAME).length).toBe(1)
   })
 
   test('quarantines all files if batch file empty', async () => {
