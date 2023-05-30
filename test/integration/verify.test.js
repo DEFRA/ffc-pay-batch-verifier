@@ -3,12 +3,6 @@ const { BlobServiceClient } = require('@azure/storage-blob')
 jest.mock('../../app/config/verify', () => ({ totalRetries: 1 }))
 const createHash = require('../../app/verify/create-hash')
 
-jest.mock('../../app/verify', () => {
-  const originalModule = jest.requireActual('../../app/verify')
-  return originalModule
-})
-const verifyBatch = require('../../app/verify')
-
 const storageConfig = require('../../app/config/storage')
 const pollInbound = require('../../app/polling/poll-inbound')
 
