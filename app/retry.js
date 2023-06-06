@@ -1,6 +1,6 @@
 const { totalRetries } = require('./config/verify')
 
-const retry = async (fn, retriesLeft = totalRetries, interval = 1000, exponential = true) => {
+const retry = async (fn, retriesLeft = totalRetries, interval = 2000, exponential = false) => {
   try {
     return (await fn())
   } catch (err) {
