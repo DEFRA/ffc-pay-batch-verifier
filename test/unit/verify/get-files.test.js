@@ -46,12 +46,12 @@ describe('get files', () => {
 
   test('should return an array of files', async () => {
     const result = await getFiles(pendingFilenames)
-    expect(result).toEqual([FILE_CONTENT, FILE_CONTENT])
+    expect(result).toEqual([FILE_CONTENT, FILE_CONTENT, FILE_CONTENT])
   })
 
   test('should retry getting files', async () => {
     await getFiles(pendingFilenames)
-    expect(mockRetry).toHaveBeenCalledTimes(3)
+    expect(mockRetry).toHaveBeenCalledTimes(4)
   })
 
   test('should throw an error if checksum control file is not found', async () => {
