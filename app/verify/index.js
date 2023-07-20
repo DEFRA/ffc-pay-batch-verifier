@@ -1,8 +1,9 @@
 const { getPendingFilenames, getPendingGlosFilenames, getProcessedFilenames } = require('./filenames')
+const { isGlosFile } = require('./is-glos-file')
 const validate = require('./validate')
 
 const verifyBatch = async (batchControlFilename) => {
-  const pendingFilenames = batchControlFilename.match(/_FCAP_/gm) ? getPendingGlosFilenames(batchControlFilename) : getPendingFilenames(batchControlFilename)
+  const pendingFilenames = isGlosFile(batchControlFilename) ? getPendingGlosFilenames(batchControlFilename) : getPendingFilenames(batchControlFilename)
   const processedFilenames = getProcessedFilenames(pendingFilenames)
 
   await validate(pendingFilenames, processedFilenames)
