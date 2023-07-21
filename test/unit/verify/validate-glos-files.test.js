@@ -6,7 +6,7 @@ const { validateGlosFiles } = require('../../../app/verify/validate-glos-files')
 let batchFile
 let controlFile
 
-describe('get files', () => {
+describe('validate glos files', () => {
   beforeEach(() => {
     jest.resetAllMocks()
   })
