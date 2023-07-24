@@ -7,7 +7,9 @@ const getFiles = async (pendingFilenames) => {
 
   return Promise.all([
     retry(() => storage.getFile(pendingFilenames.checksumFilename)),
-    retry(() => storage.getFile(pendingFilenames.batchFilename))
+    retry(() => storage.getFile(pendingFilenames.batchFilename)),
+    retry(() => storage.getFile(pendingFilenames.controlFilename))
+
   ])
 }
 

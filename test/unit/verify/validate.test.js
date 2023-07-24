@@ -1,9 +1,18 @@
 jest.mock('../../../app/verify/success')
 const mockSuccess = require('../../../app/verify/success')
+
 jest.mock('../../../app/verify/failure')
 const mockFailure = require('../../../app/verify/failure')
+
 jest.mock('../../../app/verify/get-files')
 const mockGetFiles = require('../../../app/verify/get-files')
+
+jest.mock('../../../app/verify/is-glos-file')
+const { isGlosFile: mockIsGlosFile } = require('../../../app/verify/is-glos-file')
+
+jest.mock('../../../app/verify/validate-glos-files')
+const { validateGlosFiles: mockValidateGlosFiles } = require('../../../app/verify/validate-glos-files')
+
 const validate = require('../../../app/verify/validate')
 
 const VALID_CONTENT = 'This is valid content'
@@ -49,6 +58,31 @@ describe('validate', () => {
   test('should call getFiles with pendingFilenames and processedFilenames', async () => {
     await validate(pendingFilenames, processedFilenames)
     expect(mockGetFiles).toBeCalledWith(pendingFilenames)
+  })
+
+  test('should call isGlosFile with pendingFilenames.batchFilename', async () => {
+    await validate(pendingFilenames, processedFilenames)
+    expect(mockIsGlosFile).toBeCalledWith(pendingFilenames.batchFilename)
+  })
+
+  test('should call mockValidateGlosFile when isGlosFile returns true', async () => {
+    mockIsGlosFile.mockReturnValue(true)
+    await validate(pendingFilenames, processedFilenames)
+    expect(mockValidateGlosFiles).toBeCalled()
+  })
+
+  test('should call mockFailure when mockValidateGlosFiles returns false', async () => {
+    mockIsGlosFile.mockReturnValue(true)
+    mockValidateGlosFiles.mockReturnValue(false)
+    await validate(pendingFilenames, processedFilenames)
+    expect(mockFailure).toBeCalled()
+  })
+
+  test('should not call mockFailure when mockValidateGlosFiles returns true', async () => {
+    mockIsGlosFile.mockReturnValue(true)
+    mockValidateGlosFiles.mockReturnValue(true)
+    await validate(pendingFilenames, processedFilenames)
+    expect(mockFailure).not.toBeCalled()
   })
 
   test('should call success when content matches hash', async () => {

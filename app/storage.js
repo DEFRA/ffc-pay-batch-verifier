@@ -54,7 +54,7 @@ const getPendingControlFiles = async () => {
 
   const fileList = []
   for await (const file of container.listBlobsFlat({ prefix: `${config.inboundFolder}/CTL_PENDING_` })) {
-    if (file.name.endsWith('.dat')) {
+    if (file.name.endsWith('.dat') || file.name.endsWith('.ctl')) {
       fileList.push(file.name.replace(`${config.inboundFolder}/`, ''))
     }
   }

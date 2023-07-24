@@ -7,6 +7,15 @@ const getPendingFilenames = (triggerFile) => {
   }
 }
 
+const getPendingGlosFilenames = (triggerFile) => {
+  return {
+    controlFilename: triggerFile,
+    batchFilename: triggerFile.replace('CTL_', '').replace('.ctl', '.dat'),
+    checksumControlFilename: triggerFile.replace('.ctl', '.txt'),
+    checksumFilename: triggerFile.replace('CTL_', '').replace('.ctl', '.txt')
+  }
+}
+
 const getProcessedFilenames = (pendingFilenames) => {
   return {
     controlFilename: pendingFilenames.controlFilename.replace('PENDING_', ''),
@@ -18,5 +27,6 @@ const getProcessedFilenames = (pendingFilenames) => {
 
 module.exports = {
   getPendingFilenames,
-  getProcessedFilenames
+  getProcessedFilenames,
+  getPendingGlosFilenames
 }
