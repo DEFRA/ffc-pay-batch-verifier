@@ -34,7 +34,7 @@ describe('validate glos files', () => {
     expect(result).toBe(true)
   })
 
-  test('Should return false when batchFile and controlFile are equal', async () => {
+  test('Should return false when batchFile and controlFile are not equal', async () => {
     controlFile = '1'
     mockGetNumberOfGlosInvoiceLines.mockReturnValue(7)
 
