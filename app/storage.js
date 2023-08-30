@@ -1,6 +1,8 @@
 const { DefaultAzureCredential } = require('@azure/identity')
 const { BlobServiceClient } = require('@azure/storage-blob')
 const config = require('./config/storage')
+const { getFileType } = require('./verify/get-file-type')
+const { UNKNOWN } = require('./constants/file-types')
 let blobServiceClient
 let containersInitialised
 let foldersInitialised
@@ -53,9 +55,11 @@ const getPendingControlFiles = async () => {
   containersInitialised ?? await initialiseContainers()
 
   const fileList = []
-  for await (const file of container.listBlobsFlat({ prefix: `${config.inboundFolder}/CTL_PENDING_` })) {
-    if (file.name.endsWith('.dat') || file.name.endsWith('.ctl')) {
-      fileList.push(file.name.replace(`${config.inboundFolder}/`, ''))
+  for await (const file of container.listBlobsFlat()) {
+    const filename = file.name.replace(`${config.inboundFolder}/`, '')
+    const type = getFileType(filename)
+    if (type !== UNKNOWN) {
+      fileList.push({ type, name: filename })
     }
   }
 

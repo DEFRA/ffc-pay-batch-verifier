@@ -28,8 +28,6 @@ const SECOND_CTL_CHECKSUM_BLOB_NAME = 'CTL_PENDING_TEST_2_BATCH.txt'
 
 const GLOS_BATCH_BLOB_NAME = 'PENDING_FCAP_TEST_BATCH.dat'
 const GLOS_CTL_BATCH_BLOB_NAME = 'CTL_PENDING_FCAP_TEST_BATCH.ctl'
-const GLOS_CHECKSUM_BLOB_NAME = 'PENDING_FCAP_TEST_BATCH.txt'
-const GLOS_CTL_CHECKSUM_BLOB_NAME = 'CTL_PENDING_FCAP_TEST_BATCH.txt'
 
 const PROCESSED_BATCH_BLOB_NAME = 'TEST_BATCH.dat'
 const PROCESSED_CTL_BATCH_BLOB_NAME = 'CTL_TEST_BATCH.dat'
@@ -43,8 +41,6 @@ const SECOND_PROCESSED_CTL_CHECKSUM_BLOB_NAME = 'CTL_TEST_2_BATCH.txt'
 
 const GLOS_PROCESSED_BATCH_BLOB_NAME = 'FCAP_TEST_BATCH.dat'
 const GLOS_PROCESSED_CTL_BATCH_BLOB_NAME = 'CTL_FCAP_TEST_BATCH.ctl'
-const GLOS_PROCESSED_CHECKSUM_BLOB_NAME = 'FCAP_TEST_BATCH.txt'
-const GLOS_PROCESSED_CTL_CHECKSUM_BLOB_NAME = 'CTL_FCAP_TEST_BATCH.txt'
 
 let blobServiceClient
 let container
@@ -141,13 +137,10 @@ describe('verify batch content', () => {
   test('renames Glos batch file on success if all files present and hash valid', async () => {
     await uploadBlob(GLOS_BATCH_BLOB_NAME, VALID_CONTENT)
     await uploadBlob(GLOS_CTL_BATCH_BLOB_NAME, GLOS_CONTROL_FILE_CONTENT)
-    await uploadBlob(GLOS_CHECKSUM_BLOB_NAME, VALID_HASH)
-    await uploadBlob(GLOS_CTL_CHECKSUM_BLOB_NAME, EMPTY_CONTENT)
 
     await pollInbound()
 
     const files = await getBlobs(INBOUND)
-    console.log('xxxxxx', files)
 
     expect(files.filter(x => x === GLOS_PROCESSED_BATCH_BLOB_NAME).length).toBe(1)
   })
@@ -155,41 +148,12 @@ describe('verify batch content', () => {
   test('renames and archives Glos batch control file on success if all files present and hash valid', async () => {
     await uploadBlob(GLOS_BATCH_BLOB_NAME, VALID_CONTENT)
     await uploadBlob(GLOS_CTL_BATCH_BLOB_NAME, GLOS_CONTROL_FILE_CONTENT)
-    await uploadBlob(GLOS_CHECKSUM_BLOB_NAME, VALID_HASH)
-    await uploadBlob(GLOS_CTL_CHECKSUM_BLOB_NAME, EMPTY_CONTENT)
 
     await pollInbound()
 
     const files = await getBlobs(ARCHIVE)
 
     expect(files.filter(x => x === GLOS_PROCESSED_CTL_BATCH_BLOB_NAME).length).toBe(1)
-  })
-
-  test('renames and archives Glos checksum file on success if all files present and hash valid', async () => {
-    await uploadBlob(GLOS_BATCH_BLOB_NAME, VALID_CONTENT)
-    await uploadBlob(GLOS_CTL_BATCH_BLOB_NAME, GLOS_CONTROL_FILE_CONTENT)
-    await uploadBlob(GLOS_CHECKSUM_BLOB_NAME, VALID_HASH)
-    await uploadBlob(GLOS_CTL_CHECKSUM_BLOB_NAME, EMPTY_CONTENT)
-
-    await pollInbound()
-
-    const files = await getBlobs(ARCHIVE)
-
-    expect(files.filter(x => x === GLOS_PROCESSED_CHECKSUM_BLOB_NAME).length).toBe(1)
-  })
-
-  test('renames and archives Glos checksum control file on success if all files present and hash valid', async () => {
-    await uploadBlob(GLOS_BATCH_BLOB_NAME, VALID_CONTENT)
-    await uploadBlob(GLOS_CTL_BATCH_BLOB_NAME, GLOS_CONTROL_FILE_CONTENT)
-    await uploadBlob(GLOS_CHECKSUM_BLOB_NAME, VALID_HASH)
-    await uploadBlob(GLOS_CTL_CHECKSUM_BLOB_NAME, EMPTY_CONTENT)
-
-    await pollInbound()
-
-    const files = await getBlobs(ARCHIVE)
-    console.log(files)
-
-    expect(files.filter(x => x === GLOS_PROCESSED_CTL_CHECKSUM_BLOB_NAME).length).toBe(1)
   })
 
   test('quarantines batch file on failure if all files present and hash invalid', async () => {

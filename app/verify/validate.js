@@ -3,20 +3,21 @@ const getFiles = require('./get-files')
 const success = require('./success')
 const failure = require('./failure')
 const { validateGlosFiles } = require('./validate-glos-files')
-const { isGlosFile } = require('./is-glos-file')
+const { GLOS, SITI_AGRI } = require('../constants/file-types')
 
-const validate = async (pendingFilenames, processedFilenames) => {
-  const [checksumFile, batchFile, controlFile] = await getFiles(pendingFilenames)
+const validate = async (fileType, pendingFilenames, processedFilenames) => {
+  const fileContents = await getFiles(pendingFilenames)
 
-  if (isGlosFile(pendingFilenames.batchFilename)) {
-    console.log('Identified FC file, validating against control file')
-    validateGlosFiles(batchFile, controlFile) ? console.log('FC file valid') : await failure(pendingFilenames)
-  }
-
-  if (verifyContent(batchFile, checksumFile)) {
-    await success(pendingFilenames, processedFilenames)
+  if (fileType === GLOS) {
+    validateGlosFiles(fileContents.find(x => x.filename === pendingFilenames.batchFilename).content, fileContents.find(x => x.filename === pendingFilenames.controlFilename).content)
+      ? await success(pendingFilenames, processedFilenames)
+      : await failure(pendingFilenames)
+  } else if (fileType === SITI_AGRI) {
+    verifyContent(fileContents.find(x => x.filename === pendingFilenames.batchFilename).content, fileContents.find(x => x.filename === pendingFilenames.checksumFilename).content)
+      ? await success(pendingFilenames, processedFilenames)
+      : await failure(pendingFilenames)
   } else {
-    await failure(pendingFilenames)
+    await success(pendingFilenames, processedFilenames)
   }
 }
 
