@@ -29,24 +29,34 @@ describe('get files', () => {
     }
   })
 
-  test('should try to get checksum control file first', async () => {
+  test('should try to get batch control file first', async () => {
     await getFiles(pendingFilenames)
-    expect(mockStorage.getFile).toHaveBeenNthCalledWith(1, PENDING_CTL_CHECKSUM_BLOB_NAME)
+    expect(mockStorage.getFile).toHaveBeenNthCalledWith(1, PENDING_CTL_BATCH_BLOB_NAME)
   })
 
-  test('should try to get checksum file second', async () => {
+  test('should try to get batch file second', async () => {
     await getFiles(pendingFilenames)
-    expect(mockStorage.getFile).toHaveBeenNthCalledWith(2, PENDING_CHECKSUM_BLOB_NAME)
+    expect(mockStorage.getFile).toHaveBeenNthCalledWith(2, PENDING_BATCH_BLOB_NAME)
   })
 
-  test('should try to get batch file third', async () => {
+  test('should try to get checksum control file third', async () => {
     await getFiles(pendingFilenames)
-    expect(mockStorage.getFile).toHaveBeenNthCalledWith(3, PENDING_BATCH_BLOB_NAME)
+    expect(mockStorage.getFile).toHaveBeenNthCalledWith(3, PENDING_CTL_CHECKSUM_BLOB_NAME)
   })
 
-  test('should return an array of files', async () => {
+  test('should try to get checksum file fourth', async () => {
+    await getFiles(pendingFilenames)
+    expect(mockStorage.getFile).toHaveBeenNthCalledWith(4, PENDING_CHECKSUM_BLOB_NAME)
+  })
+
+  test('should return an array of filenames and file contents', async () => {
     const result = await getFiles(pendingFilenames)
-    expect(result).toEqual([FILE_CONTENT, FILE_CONTENT, FILE_CONTENT])
+    expect(result).toEqual([
+      { filename: PENDING_CTL_BATCH_BLOB_NAME, content: FILE_CONTENT },
+      { filename: PENDING_BATCH_BLOB_NAME, content: FILE_CONTENT },
+      { filename: PENDING_CTL_CHECKSUM_BLOB_NAME, content: FILE_CONTENT },
+      { filename: PENDING_CHECKSUM_BLOB_NAME, content: FILE_CONTENT }
+    ])
   })
 
   test('should retry getting files', async () => {

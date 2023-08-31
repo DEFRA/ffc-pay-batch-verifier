@@ -1,32 +1,42 @@
-const getPendingFilenames = (triggerFile) => {
-  return {
-    controlFilename: triggerFile,
-    batchFilename: triggerFile.replace('CTL_', ''),
-    checksumControlFilename: triggerFile.replace('.dat', '.txt'),
-    checksumFilename: triggerFile.replace('CTL_', '').replace('.dat', '.txt')
-  }
-}
+const { SITI_AGRI, GENESIS, GLOS, IMPS } = require('../constants/file-types')
 
-const getPendingGlosFilenames = (triggerFile) => {
-  return {
-    controlFilename: triggerFile,
-    batchFilename: triggerFile.replace('CTL_', '').replace('.ctl', '.dat'),
-    checksumControlFilename: triggerFile.replace('.ctl', '.txt'),
-    checksumFilename: triggerFile.replace('CTL_', '').replace('.ctl', '.txt')
+const getPendingFilenames = (controlFile) => {
+  switch (controlFile.type) {
+    case SITI_AGRI:
+      return {
+        controlFilename: controlFile.name,
+        batchFilename: controlFile.name.replace('CTL_', ''),
+        checksumControlFilename: controlFile.name.replace('.dat', '.txt'),
+        checksumFilename: controlFile.name.replace('CTL_', '').replace('.dat', '.txt')
+      }
+    case GENESIS:
+      return {
+        controlFilename: controlFile.name,
+        batchFilename: controlFile.name.replace('.ctl', '.gne')
+      }
+    case GLOS:
+      return {
+        controlFilename: controlFile.name,
+        batchFilename: controlFile.name.replace('.ctl', '.dat')
+      }
+    case IMPS:
+      return {
+        controlFilename: controlFile.name,
+        batchFilename: controlFile.name.replace('CTL_', '')
+      }
+    default:
+      throw new Error(`Unknown file type ${controlFile.type}`)
   }
 }
 
 const getProcessedFilenames = (pendingFilenames) => {
-  return {
-    controlFilename: pendingFilenames.controlFilename.replace('PENDING_', ''),
-    batchFilename: pendingFilenames.batchFilename.replace('PENDING_', ''),
-    checksumControlFilename: pendingFilenames.checksumControlFilename.replace('PENDING_', ''),
-    checksumFilename: pendingFilenames.checksumFilename.replace('PENDING_', '')
-  }
+  return Object.keys(pendingFilenames).reduce((processedFilenames, key) => {
+    processedFilenames[key] = pendingFilenames[key].replace('PENDING_', '')
+    return processedFilenames
+  }, {})
 }
 
 module.exports = {
   getPendingFilenames,
-  getProcessedFilenames,
-  getPendingGlosFilenames
+  getProcessedFilenames
 }

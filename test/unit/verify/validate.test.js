@@ -7,11 +7,10 @@ const mockFailure = require('../../../app/verify/failure')
 jest.mock('../../../app/verify/get-files')
 const mockGetFiles = require('../../../app/verify/get-files')
 
-jest.mock('../../../app/verify/is-glos-file')
-const { isGlosFile: mockIsGlosFile } = require('../../../app/verify/is-glos-file')
-
 jest.mock('../../../app/verify/validate-glos-files')
 const { validateGlosFiles: mockValidateGlosFiles } = require('../../../app/verify/validate-glos-files')
+
+const { SITI_AGRI, GLOS, GENESIS, IMPS } = require('../../../app/constants/file-types')
 
 const validate = require('../../../app/verify/validate')
 
@@ -29,6 +28,7 @@ const PROCESSED_CTL_BATCH_BLOB_NAME = 'CTL_TEST_BATCH.dat'
 const PROCESSED_CHECKSUM_BLOB_NAME = 'TEST_BATCH.txt'
 const PROCESSED_CTL_CHECKSUM_BLOB_NAME = 'CTL_TEST_BATCH.txt'
 
+let fileType
 let pendingFilenames
 let processedFilenames
 
@@ -37,8 +37,15 @@ describe('validate', () => {
     jest.resetAllMocks()
 
     mockGetFiles.mockImplementation(() => {
-      return [VALID_HASH, VALID_CONTENT]
+      return [
+        { filename: PENDING_CTL_BATCH_BLOB_NAME, content: '' },
+        { filename: PENDING_BATCH_BLOB_NAME, content: VALID_CONTENT },
+        { filename: PENDING_CTL_CHECKSUM_BLOB_NAME, content: '' },
+        { filename: PENDING_CHECKSUM_BLOB_NAME, content: VALID_HASH }
+      ]
     })
+
+    fileType = SITI_AGRI
 
     pendingFilenames = {
       controlFilename: PENDING_CTL_BATCH_BLOB_NAME,
@@ -55,46 +62,56 @@ describe('validate', () => {
     }
   })
 
-  test('should call getFiles with pendingFilenames and processedFilenames', async () => {
-    await validate(pendingFilenames, processedFilenames)
+  test('should get file content for pending files', async () => {
+    await validate(fileType, pendingFilenames, processedFilenames)
     expect(mockGetFiles).toBeCalledWith(pendingFilenames)
   })
 
-  test('should call isGlosFile with pendingFilenames.batchFilename', async () => {
-    await validate(pendingFilenames, processedFilenames)
-    expect(mockIsGlosFile).toBeCalledWith(pendingFilenames.batchFilename)
-  })
-
-  test('should call mockValidateGlosFile when isGlosFile returns true', async () => {
-    mockIsGlosFile.mockReturnValue(true)
-    await validate(pendingFilenames, processedFilenames)
+  test('should validate Glos file when is Glos file', async () => {
+    fileType = GLOS
+    await validate(fileType, pendingFilenames, processedFilenames)
     expect(mockValidateGlosFiles).toBeCalled()
   })
 
-  test('should call mockFailure when mockValidateGlosFiles returns false', async () => {
-    mockIsGlosFile.mockReturnValue(true)
+  test('should fail validation when Glos validation fails', async () => {
+    fileType = GLOS
     mockValidateGlosFiles.mockReturnValue(false)
-    await validate(pendingFilenames, processedFilenames)
+    await validate(fileType, pendingFilenames, processedFilenames)
     expect(mockFailure).toBeCalled()
   })
 
-  test('should not call mockFailure when mockValidateGlosFiles returns true', async () => {
-    mockIsGlosFile.mockReturnValue(true)
+  test('should not fail validation when Glos validation passes', async () => {
+    fileType = GLOS
     mockValidateGlosFiles.mockReturnValue(true)
-    await validate(pendingFilenames, processedFilenames)
+    await validate(fileType, pendingFilenames, processedFilenames)
     expect(mockFailure).not.toBeCalled()
   })
 
-  test('should call success when content matches hash', async () => {
-    await validate(pendingFilenames, processedFilenames)
+  test('should call success when Siti Agri content matches hash', async () => {
+    await validate(fileType, pendingFilenames, processedFilenames)
     expect(mockSuccess).toBeCalledWith(pendingFilenames, processedFilenames)
   })
 
-  test('should call failure when content does not match hash', async () => {
+  test('should call failure when Siti Agri content does not match hash', async () => {
     mockGetFiles.mockImplementation(() => {
-      return [VALID_HASH, INVALID_CONTENT]
+      return [
+        { filename: PENDING_BATCH_BLOB_NAME, content: INVALID_CONTENT },
+        { filename: PENDING_CHECKSUM_BLOB_NAME, content: VALID_HASH }
+      ]
     })
-    await validate(pendingFilenames, processedFilenames)
+    await validate(fileType, pendingFilenames, processedFilenames)
     expect(mockFailure).toBeCalledWith(pendingFilenames)
+  })
+
+  test('should call success when file type is Genesis', async () => {
+    fileType = GENESIS
+    await validate(fileType, pendingFilenames, processedFilenames)
+    expect(mockSuccess).toBeCalledWith(pendingFilenames, processedFilenames)
+  })
+
+  test('should call success when file type is IMPS', async () => {
+    fileType = IMPS
+    await validate(fileType, pendingFilenames, processedFilenames)
+    expect(mockSuccess).toBeCalledWith(pendingFilenames, processedFilenames)
   })
 })

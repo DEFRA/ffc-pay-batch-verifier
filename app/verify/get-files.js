@@ -1,16 +1,14 @@
 const retry = require('../retry')
 const storage = require('../storage')
 
-const getFiles = async (pendingFilenames) => {
-  // ensure we also have a control file for checksum before continuing
-  await retry(() => storage.getFile(pendingFilenames.checksumControlFilename))
-
-  return Promise.all([
-    retry(() => storage.getFile(pendingFilenames.checksumFilename)),
-    retry(() => storage.getFile(pendingFilenames.batchFilename)),
-    retry(() => storage.getFile(pendingFilenames.controlFilename))
-
-  ])
+const getFileContent = async (pendingFilenames) => {
+  return Promise.all(
+    Object.keys(pendingFilenames).map(async (key) => {
+      const filename = pendingFilenames[key]
+      const content = await retry(() => storage.getFile(filename))
+      return { filename, content }
+    })
+  )
 }
 
-module.exports = getFiles
+module.exports = getFileContent
