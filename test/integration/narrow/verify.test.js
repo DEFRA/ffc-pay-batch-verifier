@@ -77,6 +77,7 @@ const mockContainer = {
 const mockBlobServiceClient = {
   getContainerClient: mockGetContainerClient.mockReturnValue(mockContainer)
 }
+
 jest.mock('@azure/storage-blob', () => {
   return {
     BlobServiceClient: {
@@ -84,7 +85,12 @@ jest.mock('@azure/storage-blob', () => {
     }
   }
 })
+
+const { SITI_AGRI } = require('../../../app/constants/file-types')
+
 const verify = require('../../../app/verify')
+
+const fileType = SITI_AGRI
 
 describe('verification', () => {
   const setupFileContent = (isValid) => {
@@ -170,7 +176,7 @@ describe('verification', () => {
 
   test('should download all files associated with control file', async () => {
     setupFileContent(true)
-    await verify(ORIGINAL_CTL_BATCH_FILE_NAME)
+    await verify({ type: fileType, name: ORIGINAL_CTL_BATCH_FILE_NAME })
     expect(mockOriginalBatchBlob.downloadToBuffer).toHaveBeenCalledTimes(1)
     expect(mockOriginalChecksumBlob.downloadToBuffer).toHaveBeenCalledTimes(1)
     expect(mockOriginalCtlChecksumBlob.downloadToBuffer).toHaveBeenCalledTimes(1)
@@ -178,7 +184,7 @@ describe('verification', () => {
 
   test('should rename all files on success', async () => {
     setupFileContent(true)
-    await verify(ORIGINAL_CTL_BATCH_FILE_NAME)
+    await verify({ type: fileType, name: ORIGINAL_CTL_BATCH_FILE_NAME })
     expect(mockProcessedBatchBlob.beginCopyFromURL).toHaveBeenCalledWith(mockOriginalBatchBlob.url)
     expect(mockProcessedCtlBatchBlob.beginCopyFromURL).toHaveBeenCalledWith(mockOriginalCtlBatchBlob.url)
     expect(mockProcessedChecksumBlob.beginCopyFromURL).toHaveBeenCalledWith(mockOriginalChecksumBlob.url)
@@ -187,7 +193,7 @@ describe('verification', () => {
 
   test('should control files and checksum on success', async () => {
     setupFileContent(true)
-    await verify(ORIGINAL_CTL_BATCH_FILE_NAME)
+    await verify({ type: fileType, name: ORIGINAL_CTL_BATCH_FILE_NAME })
     expect(mockArchiveCtlBatchBlob.beginCopyFromURL).toHaveBeenCalledWith(mockProcessedCtlBatchBlob.url)
     expect(mockArchiveChecksumBlob.beginCopyFromURL).toHaveBeenCalledWith(mockProcessedChecksumBlob.url)
     expect(mockArchiveCtlChecksumBlob.beginCopyFromURL).toHaveBeenCalledWith(mockProcessedCtlChecksumBlob.url)
@@ -195,7 +201,7 @@ describe('verification', () => {
 
   test('should quarantine files on failure', async () => {
     setupFileContent(false)
-    await verify(ORIGINAL_CTL_BATCH_FILE_NAME)
+    await verify({ type: fileType, name: ORIGINAL_CTL_BATCH_FILE_NAME })
     expect(mockQuarantineBatchBlob.beginCopyFromURL).toHaveBeenCalledWith(mockOriginalBatchBlob.url)
     expect(mockQuarantineCtlBatchBlob.beginCopyFromURL).toHaveBeenCalledWith(mockOriginalCtlBatchBlob.url)
     expect(mockQuarantineChecksumBlob.beginCopyFromURL).toHaveBeenCalledWith(mockOriginalChecksumBlob.url)
@@ -204,16 +210,16 @@ describe('verification', () => {
 
   test('should throw error if batch file missing', async () => {
     mockOriginalBatchBlob.downloadToBuffer.mockImplementation(() => { throw new Error() })
-    await expect(verify(ORIGINAL_CTL_BATCH_FILE_NAME)).rejects.toThrow()
+    await expect(verify({ type: fileType, name: ORIGINAL_CTL_BATCH_FILE_NAME })).rejects.toThrow()
   })
 
   test('should throw error if checksum file missing', async () => {
     mockOriginalChecksumBlob.downloadToBuffer.mockImplementation(() => { throw new Error() })
-    await expect(verify(ORIGINAL_CTL_BATCH_FILE_NAME)).rejects.toThrow()
+    await expect(verify({ type: fileType, name: ORIGINAL_CTL_BATCH_FILE_NAME })).rejects.toThrow()
   })
 
   test('should throw error if checksum control file missing', async () => {
     mockOriginalCtlChecksumBlob.downloadToBuffer.mockImplementation(() => { throw new Error() })
-    await expect(verify(ORIGINAL_CTL_BATCH_FILE_NAME)).rejects.toThrow()
+    await expect(verify({ type: fileType, name: ORIGINAL_CTL_BATCH_FILE_NAME })).rejects.toThrow()
   })
 })

@@ -1,10 +1,10 @@
 const { BlobServiceClient } = require('@azure/storage-blob')
 
-jest.mock('../../app/config/verify', () => ({ totalRetries: 1 }))
-const createHash = require('../../app/verify/create-hash')
+jest.mock('../../../app/config/verify', () => ({ totalRetries: 1 }))
+const createHash = require('../../../app/verify/create-hash')
 
-const storageConfig = require('../../app/config/storage')
-const pollInbound = require('../../app/polling/poll-inbound')
+const storageConfig = require('../../../app/config/storage')
+const pollInbound = require('../../../app/polling/poll-inbound')
 
 const INBOUND = 'inbound'
 const ARCHIVE = 'archive'
@@ -27,7 +27,7 @@ const SECOND_CHECKSUM_BLOB_NAME = 'PENDING_TEST_2_BATCH.txt'
 const SECOND_CTL_CHECKSUM_BLOB_NAME = 'CTL_PENDING_TEST_2_BATCH.txt'
 
 const GLOS_BATCH_BLOB_NAME = 'PENDING_FCAP_TEST_BATCH.dat'
-const GLOS_CTL_BATCH_BLOB_NAME = 'CTL_PENDING_FCAP_TEST_BATCH.ctl'
+const GLOS_CTL_BATCH_BLOB_NAME = 'PENDING_FCAP_TEST_BATCH.ctl'
 
 const PROCESSED_BATCH_BLOB_NAME = 'TEST_BATCH.dat'
 const PROCESSED_CTL_BATCH_BLOB_NAME = 'CTL_TEST_BATCH.dat'
@@ -40,7 +40,7 @@ const SECOND_PROCESSED_CHECKSUM_BLOB_NAME = 'TEST_2_BATCH.txt'
 const SECOND_PROCESSED_CTL_CHECKSUM_BLOB_NAME = 'CTL_TEST_2_BATCH.txt'
 
 const GLOS_PROCESSED_BATCH_BLOB_NAME = 'FCAP_TEST_BATCH.dat'
-const GLOS_PROCESSED_CTL_BATCH_BLOB_NAME = 'CTL_FCAP_TEST_BATCH.ctl'
+const GLOS_PROCESSED_CTL_BATCH_BLOB_NAME = 'FCAP_TEST_BATCH.ctl'
 
 let blobServiceClient
 let container
