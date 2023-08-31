@@ -10,7 +10,7 @@ const mockGetFiles = require('../../../app/verify/get-files')
 jest.mock('../../../app/verify/validate-glos-files')
 const { validateGlosFiles: mockValidateGlosFiles } = require('../../../app/verify/validate-glos-files')
 
-const { SITI_AGRI, GLOS } = require('../../../app/constants/file-types')
+const { SITI_AGRI, GLOS, GENESIS, IMPS } = require('../../../app/constants/file-types')
 
 const validate = require('../../../app/verify/validate')
 
@@ -101,5 +101,17 @@ describe('validate', () => {
     })
     await validate(fileType, pendingFilenames, processedFilenames)
     expect(mockFailure).toBeCalledWith(pendingFilenames)
+  })
+
+  test('should call success when file type is Genesis', async () => {
+    fileType = GENESIS
+    await validate(fileType, pendingFilenames, processedFilenames)
+    expect(mockSuccess).toBeCalledWith(pendingFilenames, processedFilenames)
+  })
+
+  test('should call success when file type is IMPS', async () => {
+    fileType = IMPS
+    await validate(fileType, pendingFilenames, processedFilenames)
+    expect(mockSuccess).toBeCalledWith(pendingFilenames, processedFilenames)
   })
 })
