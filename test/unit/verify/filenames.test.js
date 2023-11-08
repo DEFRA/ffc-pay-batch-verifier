@@ -1,6 +1,6 @@
 const filenames = require('../../../app/verify/filenames')
 
-const { SITI_AGRI, GENESIS, GLOS, IMPS, UNKNOWN } = require('../../../app/constants/file-types')
+const { SITI_AGRI, GENESIS, GLOS, IMPS, DPS, UNKNOWN } = require('../../../app/constants/file-types')
 
 const PENDING_SITI_AGRI_BATCH_BLOB_NAME = 'PENDING_TEST_BATCH.dat'
 const PENDING_SITI_AGRI_CTL_BATCH_BLOB_NAME = 'CTL_PENDING_TEST_BATCH.dat'
@@ -29,6 +29,12 @@ const PENDING_IMPS_CTL_BATCH_BLOB_NAME = 'CTL_PENDING_TEST_BATCH.INT'
 
 const PROCESSED_IMPS_BATCH_BLOB_NAME = 'TEST_BATCH.INT'
 const PROCESSED_IMPS_CTL_BATCH_BLOB_NAME = 'CTL_TEST_BATCH.INT'
+
+const PENDING_DPS_BATCH_BLOB_NAME = 'PENDING_BGAN_TEST_BATCH.OUT'
+const PENDING_DPS_CTL_BATCH_BLOB_NAME = 'CTL_PENDING_BGAN_TEST_BATCH.OUT'
+
+const PROCESSED_DPS_BATCH_BLOB_NAME = 'BGAN_TEST_BATCH.OUT'
+const PROCESSED_DPS_CTL_BATCH_BLOB_NAME = 'CTL_BGAN_TEST_BATCH.OUT'
 
 describe('filenames', () => {
   test('should return four pending filenames if file type is Siti Agri', () => {
@@ -110,6 +116,25 @@ describe('filenames', () => {
     expect(result).toEqual({
       controlFilename: PROCESSED_IMPS_CTL_BATCH_BLOB_NAME,
       batchFilename: PROCESSED_IMPS_BATCH_BLOB_NAME
+    })
+  })
+
+  test('should return two pending filenames if file type is DPS', () => {
+    const result = filenames.getPendingFilenames({ name: PENDING_DPS_CTL_BATCH_BLOB_NAME, type: DPS })
+    expect(result).toEqual({
+      controlFilename: PENDING_DPS_CTL_BATCH_BLOB_NAME,
+      batchFilename: PENDING_DPS_BATCH_BLOB_NAME
+    })
+  })
+
+  test('should return two processed filenames if file type is DPS', () => {
+    const result = filenames.getProcessedFilenames({
+      controlFilename: PENDING_DPS_CTL_BATCH_BLOB_NAME,
+      batchFilename: PENDING_DPS_BATCH_BLOB_NAME
+    })
+    expect(result).toEqual({
+      controlFilename: PROCESSED_DPS_CTL_BATCH_BLOB_NAME,
+      batchFilename: PROCESSED_DPS_BATCH_BLOB_NAME
     })
   })
 
