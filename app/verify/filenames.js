@@ -1,4 +1,4 @@
-const { SITI_AGRI, GENESIS, GLOS, IMPS } = require('../constants/file-types')
+const { SITI_AGRI, GENESIS, GLOS, IMPS, DPS } = require('../constants/file-types')
 
 const getPendingFilenames = (controlFile) => {
   switch (controlFile.type) {
@@ -20,6 +20,7 @@ const getPendingFilenames = (controlFile) => {
         batchFilename: controlFile.name.replace('.ctl', '.dat')
       }
     case IMPS:
+    case DPS:
       return {
         controlFilename: controlFile.name,
         batchFilename: controlFile.name.replace('CTL_', '')

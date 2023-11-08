@@ -3,5 +3,6 @@ module.exports = {
   GENESIS: 'Genesis',
   GLOS: 'GLOS',
   IMPS: 'IMPS',
+  DPS: 'DPS',
   UNKNOWN: 'UNKNOWN'
 }

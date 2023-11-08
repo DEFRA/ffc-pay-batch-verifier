@@ -1,4 +1,4 @@
-const { SITI_AGRI, GENESIS, GLOS, IMPS, UNKNOWN } = require('../constants/file-types')
+const { SITI_AGRI, GENESIS, GLOS, IMPS, DPS, UNKNOWN } = require('../constants/file-types')
 
 const getFileType = (filename) => {
   if (!filename.includes('PENDING_')) {
@@ -15,6 +15,10 @@ const getFileType = (filename) => {
 
   if (filename.startsWith('PENDING_FCAP') && filename.endsWith('.ctl')) {
     return GLOS
+  }
+
+  if (filename.startsWith('CTL_PENDING_BGAN') && filename.endsWith('.OUT')) {
+    return DPS
   }
 
   if (filename.startsWith('CTL_PENDING_') && filename.endsWith('.INT')) {
