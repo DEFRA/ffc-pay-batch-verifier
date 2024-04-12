@@ -12,7 +12,7 @@ const getPendingFilenames = (controlFile) => {
     case GENESIS:
       return {
         controlFilename: controlFile.name,
-        batchFilename: controlFile.name.replace('.ctl', '.gne')
+        batchFilename: controlFile.name.replace('.ctl', '')
       }
     case GLOS:
       return {
