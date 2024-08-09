@@ -21,7 +21,7 @@ deployment: {}
 
 container:
   requestMemory: 150Mi
-  requestCpu: 60m
+  requestCpu: 150m
   limitMemory: 300Mi
   limitCpu: 300m
   azureStorageAccountName: ffcpay
