@@ -20,10 +20,10 @@ containerSecret:
 deployment: {}
 
 container:
-  requestMemory: 100Mi
-  requestCpu: 60m
-  limitMemory: 200Mi
-  limitCpu: 200m
+  requestMemory: 150Mi
+  requestCpu: 150m
+  limitMemory: 300Mi
+  limitCpu: 300m
   azureStorageAccountName: ffcpay
   azureStorageConnectionString: dummy
   azureStorageUseConnectionString: false
