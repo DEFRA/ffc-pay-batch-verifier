@@ -13,7 +13,7 @@ services:
       AZURE_STORAGE_CREATE_CONTAINERS: "true"
 
   ffc-pay-batch-azurite:
-    image: mcr.microsoft.com/azure-storage/azurite:3.9.0
+    image: mcr.microsoft.com/azure-storage/azurite:3.32.0
     command: "azurite-blob --loose --blobHost 0.0.0.0"
     labels:
       com.docker.compose.pay.role: ffc-pay-batch-azurite
