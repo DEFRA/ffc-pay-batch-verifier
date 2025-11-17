@@ -1,52 +1,29 @@
 jest.mock('../../../app/verify/get-number-of-glos-invoice-lines')
 const { getNumberOfGlosInvoiceLines: mockGetNumberOfGlosInvoiceLines } = require('../../../app/verify/get-number-of-glos-invoice-lines')
-
 const { validateGlosFiles } = require('../../../app/verify/validate-glos-files')
 
-let batchFile
-let controlFile
+describe('validateGlosFiles', () => {
+  let batchFile, controlFile
 
-describe('validate glos files', () => {
   beforeEach(() => {
     jest.resetAllMocks()
+    batchFile = ''
   })
 
-  test('Should call mockGetNumberOfGlosInvoiceLines', async () => {
+  test('calls getNumberOfGlosInvoiceLines with batchFile once', () => {
     validateGlosFiles(batchFile, controlFile)
-    expect(mockGetNumberOfGlosInvoiceLines).toBeCalled()
+    expect(mockGetNumberOfGlosInvoiceLines).toHaveBeenCalledTimes(1)
+    expect(mockGetNumberOfGlosInvoiceLines).toHaveBeenCalledWith(batchFile)
   })
 
-  test('Should call mockGetNumberOfGlosInvoiceLines once', async () => {
-    validateGlosFiles(batchFile, controlFile)
-    expect(mockGetNumberOfGlosInvoiceLines).toBeCalledTimes(1)
-  })
-
-  test('Should call mockGetNumberOfGlosInvoiceLines with batchFile', async () => {
-    validateGlosFiles(batchFile, controlFile)
-    expect(mockGetNumberOfGlosInvoiceLines).toBeCalledWith(batchFile)
-  })
-
-  test('Should return true when batchFile and controlFile are equal', async () => {
-    controlFile = '7'
-    mockGetNumberOfGlosInvoiceLines.mockReturnValue(7)
-
+  test.each([
+    [7, '7', true],
+    [7, '1', false],
+    [7, 'abcdefg', false]
+  ])('returns %p when batch lines=%i and controlFile="%s"', (lines, control, expected) => {
+    controlFile = control
+    mockGetNumberOfGlosInvoiceLines.mockReturnValue(lines)
     const result = validateGlosFiles(batchFile, controlFile)
-    expect(result).toBe(true)
-  })
-
-  test('Should return false when batchFile and controlFile are not equal', async () => {
-    controlFile = '1'
-    mockGetNumberOfGlosInvoiceLines.mockReturnValue(7)
-
-    const result = validateGlosFiles(batchFile, controlFile)
-    expect(result).toBe(false)
-  })
-
-  test('Should return false when batchFile is a string', async () => {
-    controlFile = 'abcdefg'
-    mockGetNumberOfGlosInvoiceLines.mockReturnValue(7)
-
-    const result = validateGlosFiles(batchFile, controlFile)
-    expect(result).toBe(false)
+    expect(result).toBe(expected)
   })
 })

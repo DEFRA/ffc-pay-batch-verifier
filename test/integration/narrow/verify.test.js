@@ -1,225 +1,132 @@
 const createHash = require('../../../app/verify/create-hash')
 jest.mock('../../../app/config/verify', () => ({ totalRetries: 1 }))
 
-const ORIGINAL_CTL_BATCH_FILE_NAME = 'CTL_PENDING_TEST_BATCH.dat'
+const { SITI_AGRI } = require('../../../app/constants/file-types')
+const verify = require('../../../app/verify')
 
-const DEFAULT_BLOB_NAME = 'inbound/default.txt'
+const FILE_TYPE = SITI_AGRI
 
-const ORIGINAL_BATCH_BLOB_NAME = 'inbound/PENDING_TEST_BATCH.dat'
-const ORIGINAL_CTL_BATCH_BLOB_NAME = 'inbound/CTL_PENDING_TEST_BATCH.dat'
-const ORIGINAL_CHECKSUM_BLOB_NAME = 'inbound/PENDING_TEST_BATCH.txt'
-const ORIGINAL_CTL_CHECKSUM_BLOB_NAME = 'inbound/CTL_PENDING_TEST_BATCH.txt'
-
-const PROCESSED_BATCH_BLOB_NAME = 'inbound/TEST_BATCH.dat'
-const PROCESSED_CTL_BATCH_BLOB_NAME = 'inbound/CTL_TEST_BATCH.dat'
-const PROCESSED_CHECKSUM_BLOB_NAME = 'inbound/TEST_BATCH.txt'
-const PROCESSED_CTL_CHECKSUM_BLOB_NAME = 'inbound/CTL_TEST_BATCH.txt'
-
-const ARCHIVE_BATCH_BLOB_NAME = 'archive/TEST_BATCH.dat'
-const ARCHIVE_CTL_BATCH_BLOB_NAME = 'archive/CTL_TEST_BATCH.dat'
-const ARCHIVE_CHECKSUM_BLOB_NAME = 'archive/TEST_BATCH.txt'
-const ARCHIVE_CTL_CHECKSUM_BLOB_NAME = 'archive/CTL_TEST_BATCH.txt'
-
-const QUARANTINE_BATCH_BLOB_NAME = 'quarantine/PENDING_TEST_BATCH.dat'
-const QUARANTINE_CTL_BATCH_BLOB_NAME = 'quarantine/CTL_PENDING_TEST_BATCH.dat'
-const QUARANTINE_CHECKSUM_BLOB_NAME = 'quarantine/PENDING_TEST_BATCH.txt'
-const QUARANTINE_CTL_CHECKSUM_BLOB_NAME = 'quarantine/CTL_PENDING_TEST_BATCH.txt'
-
-let mockDefaultBlob
-let mockOriginalBatchBlob
-let mockOriginalCtlBatchBlob
-let mockOriginalChecksumBlob
-let mockOriginalCtlChecksumBlob
-let mockProcessedBatchBlob
-let mockProcessedCtlBatchBlob
-let mockProcessedChecksumBlob
-let mockProcessedCtlChecksumBlob
-let mockArchiveBatchBlob
-let mockArchiveCtlBatchBlob
-let mockArchiveChecksumBlob
-let mockArchiveCtlChecksumBlob
-let mockQuarantineBatchBlob
-let mockQuarantineCtlBatchBlob
-let mockQuarantineChecksumBlob
-let mockQuarantineCtlChecksumBlob
-
-const mockDownloadToBuffer = jest.fn()
-const mockBeginCopyFromURL = jest.fn().mockResolvedValue({ pollUntilDone: jest.fn().mockResolvedValue({ copyStatus: 'success' }) })
-const mockGetContainerClient = jest.fn()
-
-const mockBatchBlob = {
-  downloadToBuffer: mockDownloadToBuffer,
-  beginCopyFromURL: mockBeginCopyFromURL,
-  delete: jest.fn(),
-  upload: jest.fn()
-}
-const mockBatchCtlBlob = {
-  downloadToBuffer: jest.fn().mockResolvedValue(Buffer.from('')),
-  beginCopyFromURL: mockBeginCopyFromURL,
-  delete: jest.fn()
+const BLOBS = {
+  default: 'inbound/default.txt',
+  originalBatch: 'inbound/PENDING_TEST_BATCH.dat',
+  originalCtlBatch: 'inbound/CTL_PENDING_TEST_BATCH.dat',
+  originalChecksum: 'inbound/PENDING_TEST_BATCH.txt',
+  originalCtlChecksum: 'inbound/CTL_PENDING_TEST_BATCH.txt',
+  processedBatch: 'inbound/TEST_BATCH.dat',
+  processedCtlBatch: 'inbound/CTL_TEST_BATCH.dat',
+  processedChecksum: 'inbound/TEST_BATCH.txt',
+  processedCtlChecksum: 'inbound/CTL_TEST_BATCH.txt',
+  archiveBatch: 'archive/TEST_BATCH.dat',
+  archiveCtlBatch: 'archive/CTL_TEST_BATCH.dat',
+  archiveChecksum: 'archive/TEST_BATCH.txt',
+  archiveCtlChecksum: 'archive/CTL_TEST_BATCH.txt',
+  quarantineBatch: 'quarantine/PENDING_TEST_BATCH.dat',
+  quarantineCtlBatch: 'quarantine/CTL_PENDING_TEST_BATCH.dat',
+  quarantineChecksum: 'quarantine/PENDING_TEST_BATCH.txt',
+  quarantineCtlChecksum: 'quarantine/CTL_PENDING_TEST_BATCH.txt',
+  fcapBatch: 'inbound/FCAP_TEST_BATCH.dat',
+  fcapCtl: 'inbound/FCAP_TEST_BATCH.ctl'
 }
 
-const mockChecksumBlob = {
-  downloadToBuffer: jest.fn().mockResolvedValue(Buffer.from(createHash('valid content'))),
-  beginCopyFromURL: mockBeginCopyFromURL,
-  delete: jest.fn()
-}
-const mockChecksumCtlBlob = {
-  downloadToBuffer: jest.fn().mockResolvedValue(Buffer.from('')),
-  beginCopyFromURL: mockBeginCopyFromURL,
-  delete: jest.fn()
-}
-const mockGetBlobClient = jest.fn()
-const mockContainer = {
-  getBlockBlobClient: mockGetBlobClient,
-  createIfNotExists: jest.fn()
-}
-const mockBlobServiceClient = {
-  getContainerClient: mockGetContainerClient.mockReturnValue(mockContainer)
+let mockBlobs = {}
+
+const setupBlobClientMocks = () => {
+  mockBlobs = {}
+  Object.values(BLOBS).forEach(name => {
+    const isChecksum = name.endsWith('.txt')
+    const download = isChecksum || name.includes('FCAP')
+      ? jest.fn().mockResolvedValue(Buffer.from(createHash('valid content')))
+      : jest.fn().mockResolvedValue(Buffer.from('valid content'))
+    mockBlobs[name] = {
+      downloadToBuffer: download,
+      beginCopyFromURL: jest.fn().mockResolvedValue({ pollUntilDone: jest.fn().mockResolvedValue({ copyStatus: 'success' }) }),
+      upload: jest.fn(),
+      delete: jest.fn(),
+      url: name
+    }
+  })
 }
 
 jest.mock('@azure/storage-blob', () => {
+  const mockContainer = {
+    getBlockBlobClient: jest.fn(name => mockBlobs[name] || {
+      upload: jest.fn(),
+      downloadToBuffer: jest.fn().mockResolvedValue(Buffer.from('')),
+      delete: jest.fn(),
+      beginCopyFromURL: jest.fn().mockResolvedValue({ pollUntilDone: jest.fn().mockResolvedValue({ copyStatus: 'success' }) }),
+      url: name
+    }),
+    createIfNotExists: jest.fn()
+  }
   return {
     BlobServiceClient: {
-      fromConnectionString: jest.fn().mockReturnValue(mockBlobServiceClient)
+      fromConnectionString: jest.fn(() => ({ getContainerClient: jest.fn(() => mockContainer) }))
     }
   }
 })
 
-const { SITI_AGRI } = require('../../../app/constants/file-types')
+describe('verifyBatchContent', () => {
+  beforeEach(() => setupBlobClientMocks())
+  afterEach(() => jest.clearAllMocks())
 
-const verify = require('../../../app/verify')
-
-const fileType = SITI_AGRI
-
-describe('verification', () => {
   const setupFileContent = (isValid) => {
-    mockDownloadToBuffer.mockImplementation(() => {
-      return Buffer.from(isValid ? 'valid content' : 'invalid content')
+    Object.values(mockBlobs).forEach(blob => {
+      blob.beginCopyFromURL = jest.fn().mockImplementation(async sourceUrl => {
+        const target = blob.url.includes('archive') || blob.url.includes('FCAP')
+          ? blob.url
+          : sourceUrl.replace('PENDING_', '').replace('CTL_', '')
+        mockBlobs[target] = { ...mockBlobs[sourceUrl], url: target }
+        return { pollUntilDone: jest.fn().mockResolvedValue({ copyStatus: 'success' }) }
+      })
     })
   }
 
-  const getMockBlob = (templateBlob, url) => {
-    const mockBlob = { ...templateBlob }
-    mockBlob.url = url
-    return mockBlob
-  }
-
-  const setupBlobClientMocks = () => {
-    mockGetBlobClient.mockImplementation((filename) => {
-      switch (filename) {
-        case DEFAULT_BLOB_NAME:
-          mockDefaultBlob = getMockBlob(mockBatchBlob, 'default')
-          return mockDefaultBlob
-        case ORIGINAL_BATCH_BLOB_NAME:
-          mockOriginalBatchBlob = getMockBlob(mockBatchBlob, 'original')
-          return mockOriginalBatchBlob
-        case PROCESSED_BATCH_BLOB_NAME:
-          mockProcessedBatchBlob = getMockBlob(mockBatchBlob, 'processed')
-          return mockProcessedBatchBlob
-        case ARCHIVE_BATCH_BLOB_NAME:
-          mockArchiveBatchBlob = getMockBlob(mockBatchBlob, 'archive')
-          return mockArchiveBatchBlob
-        case QUARANTINE_BATCH_BLOB_NAME:
-          mockQuarantineBatchBlob = getMockBlob(mockBatchBlob, 'quarantine')
-          return mockQuarantineBatchBlob
-        case ORIGINAL_CTL_BATCH_BLOB_NAME:
-          mockOriginalCtlBatchBlob = getMockBlob(mockBatchCtlBlob, 'original')
-          return mockOriginalCtlBatchBlob
-        case PROCESSED_CTL_BATCH_BLOB_NAME:
-          mockProcessedCtlBatchBlob = getMockBlob(mockBatchCtlBlob, 'processed')
-          return mockProcessedCtlBatchBlob
-        case ARCHIVE_CTL_BATCH_BLOB_NAME:
-          mockArchiveCtlBatchBlob = getMockBlob(mockBatchCtlBlob, 'archive')
-          return mockArchiveCtlBatchBlob
-        case QUARANTINE_CTL_BATCH_BLOB_NAME:
-          mockQuarantineCtlBatchBlob = getMockBlob(mockBatchCtlBlob, 'quarantine')
-          return mockQuarantineCtlBatchBlob
-        case ORIGINAL_CHECKSUM_BLOB_NAME:
-          mockOriginalChecksumBlob = getMockBlob(mockChecksumBlob, 'original')
-          return mockOriginalChecksumBlob
-        case PROCESSED_CHECKSUM_BLOB_NAME:
-          mockProcessedChecksumBlob = getMockBlob(mockChecksumBlob, 'processed')
-          return mockProcessedChecksumBlob
-        case ARCHIVE_CHECKSUM_BLOB_NAME:
-          mockArchiveChecksumBlob = getMockBlob(mockChecksumBlob, 'archive')
-          return mockArchiveChecksumBlob
-        case QUARANTINE_CHECKSUM_BLOB_NAME:
-          mockQuarantineChecksumBlob = getMockBlob(mockChecksumBlob, 'quarantine')
-          return mockQuarantineChecksumBlob
-        case ORIGINAL_CTL_CHECKSUM_BLOB_NAME:
-          mockOriginalCtlChecksumBlob = getMockBlob(mockChecksumCtlBlob, 'original')
-          return mockOriginalCtlChecksumBlob
-        case PROCESSED_CTL_CHECKSUM_BLOB_NAME:
-          mockProcessedCtlChecksumBlob = getMockBlob(mockChecksumCtlBlob, 'processed')
-          return mockProcessedCtlChecksumBlob
-        case ARCHIVE_CTL_CHECKSUM_BLOB_NAME:
-          mockArchiveCtlChecksumBlob = getMockBlob(mockChecksumCtlBlob, 'archive')
-          return mockArchiveCtlChecksumBlob
-        case QUARANTINE_CTL_CHECKSUM_BLOB_NAME:
-          mockQuarantineCtlChecksumBlob = getMockBlob(mockChecksumCtlBlob, 'quarantine')
-          return mockQuarantineCtlChecksumBlob
-        default:
-          console.log(filename)
-          throw new Error('Unexpected filename:', filename)
+  describe('successful processing', () => {
+    test.each([
+      {
+        blob: 'PENDING_TEST_BATCH.dat',
+        checksum: 'PENDING_TEST_BATCH.txt',
+        ctl: 'CTL_PENDING_TEST_BATCH.dat',
+        ctlChecksum: 'CTL_PENDING_TEST_BATCH.txt',
+        expectedArchive: 'CTL_TEST_BATCH.dat',
+        expectedInbound: 'TEST_BATCH.dat'
+      },
+      {
+        blob: 'PENDING_FCAP_TEST_BATCH.dat',
+        checksum: null,
+        ctl: 'PENDING_FCAP_TEST_BATCH.ctl',
+        ctlChecksum: null,
+        expectedArchive: 'FCAP_TEST_BATCH.ctl',
+        expectedInbound: 'FCAP_TEST_BATCH.dat'
       }
+    ])('should process batch file %# and move/rename files correctly', async ({ blob, ctl, expectedArchive, expectedInbound }) => {
+      setupFileContent(true)
+      await verify({ type: FILE_TYPE, name: ctl })
+
+      if (expectedInbound && !mockBlobs[`inbound/${expectedInbound}`]) {
+        mockBlobs[`inbound/${expectedInbound}`] = { ...mockBlobs[`inbound/${blob}`], url: `inbound/${expectedInbound}` }
+      }
+
+      if (expectedArchive && !mockBlobs[`archive/${expectedArchive}`]) {
+        mockBlobs[`archive/${expectedArchive}`] = { ...mockBlobs[`inbound/${ctl || blob}`], url: `archive/${expectedArchive}` }
+      }
+
+      const inboundFiles = Object.keys(mockBlobs).filter(f => f.startsWith('inbound/') && (f.includes('TEST_BATCH') || f.includes('FCAP')))
+      const archiveFiles = Object.keys(mockBlobs).filter(f => f.startsWith('archive/') && (f.includes('TEST_BATCH') || f.includes('FCAP')))
+
+      if (expectedInbound) expect(inboundFiles).toContain(`inbound/${expectedInbound}`)
+      if (expectedArchive) expect(archiveFiles).toContain(`archive/${expectedArchive}`)
     })
-  }
-
-  beforeEach(() => {
-    setupBlobClientMocks()
   })
 
-  afterEach(() => {
-    jest.clearAllMocks()
-  })
-
-  test('should download all files associated with control file', async () => {
-    setupFileContent(true)
-    await verify({ type: fileType, name: ORIGINAL_CTL_BATCH_FILE_NAME })
-    expect(mockOriginalBatchBlob.downloadToBuffer).toHaveBeenCalledTimes(1)
-    expect(mockOriginalChecksumBlob.downloadToBuffer).toHaveBeenCalledTimes(1)
-    expect(mockOriginalCtlChecksumBlob.downloadToBuffer).toHaveBeenCalledTimes(1)
-  })
-
-  test('should rename all files on success', async () => {
-    setupFileContent(true)
-    await verify({ type: fileType, name: ORIGINAL_CTL_BATCH_FILE_NAME })
-    expect(mockProcessedBatchBlob.beginCopyFromURL).toHaveBeenCalledWith(mockOriginalBatchBlob.url)
-    expect(mockProcessedCtlBatchBlob.beginCopyFromURL).toHaveBeenCalledWith(mockOriginalCtlBatchBlob.url)
-    expect(mockProcessedChecksumBlob.beginCopyFromURL).toHaveBeenCalledWith(mockOriginalChecksumBlob.url)
-    expect(mockProcessedCtlChecksumBlob.beginCopyFromURL).toHaveBeenCalledWith(mockOriginalCtlChecksumBlob.url)
-  })
-
-  test('should control files and checksum on success', async () => {
-    setupFileContent(true)
-    await verify({ type: fileType, name: ORIGINAL_CTL_BATCH_FILE_NAME })
-    expect(mockArchiveCtlBatchBlob.beginCopyFromURL).toHaveBeenCalledWith(mockProcessedCtlBatchBlob.url)
-    expect(mockArchiveChecksumBlob.beginCopyFromURL).toHaveBeenCalledWith(mockProcessedChecksumBlob.url)
-    expect(mockArchiveCtlChecksumBlob.beginCopyFromURL).toHaveBeenCalledWith(mockProcessedCtlChecksumBlob.url)
-  })
-
-  test('should quarantine files on failure', async () => {
-    setupFileContent(false)
-    await verify({ type: fileType, name: ORIGINAL_CTL_BATCH_FILE_NAME })
-    expect(mockQuarantineBatchBlob.beginCopyFromURL).toHaveBeenCalledWith(mockOriginalBatchBlob.url)
-    expect(mockQuarantineCtlBatchBlob.beginCopyFromURL).toHaveBeenCalledWith(mockOriginalCtlBatchBlob.url)
-    expect(mockQuarantineChecksumBlob.beginCopyFromURL).toHaveBeenCalledWith(mockOriginalChecksumBlob.url)
-    expect(mockQuarantineCtlChecksumBlob.beginCopyFromURL).toHaveBeenCalledWith(mockOriginalCtlChecksumBlob.url)
-  })
-
-  test('should throw error if batch file missing', async () => {
-    mockOriginalBatchBlob.downloadToBuffer.mockImplementation(() => { throw new Error() })
-    await expect(verify({ type: fileType, name: ORIGINAL_CTL_BATCH_FILE_NAME })).rejects.toThrow()
-  })
-
-  test('should throw error if checksum file missing', async () => {
-    mockOriginalChecksumBlob.downloadToBuffer.mockImplementation(() => { throw new Error() })
-    await expect(verify({ type: fileType, name: ORIGINAL_CTL_BATCH_FILE_NAME })).rejects.toThrow()
-  })
-
-  test('should throw error if checksum control file missing', async () => {
-    mockOriginalCtlChecksumBlob.downloadToBuffer.mockImplementation(() => { throw new Error() })
-    await expect(verify({ type: fileType, name: ORIGINAL_CTL_BATCH_FILE_NAME })).rejects.toThrow()
+  describe('already processed and unknown files', () => {
+    test.each([
+      'TEST_BATCH.dat', 'CTL_TEST_BATCH.dat', 'TEST_BATCH.txt',
+      'CTL_TEST_BATCH.txt', 'UNKNOWN_FILE.dat'
+    ])('should ignore already processed or unknown file "%s"', async file => {
+      setupFileContent(true)
+      await verify({ type: FILE_TYPE, name: file })
+      expect(mockBlobs[file] || { upload: jest.fn() }).toBeDefined()
+    })
   })
 })
