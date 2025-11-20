@@ -1,62 +1,44 @@
 jest.mock('../../../app/storage')
-const mockStorage = require('../../../app/storage')
-
 jest.mock('../../../app/verify')
-const mockVerify = require('../../../app/verify')
 
+const mockStorage = require('../../../app/storage')
+const mockVerify = require('../../../app/verify')
 const pollInbound = require('../../../app/polling/poll-inbound')
 
-const FILE_NAME_1 = 'CTL_PENDING_TEST_BATCH_1.dat'
-const FILE_NAME_2 = 'CTL_PENDING_TEST_BATCH_2.dat'
+const FILES = ['CTL_PENDING_TEST_BATCH_1.dat', 'CTL_PENDING_TEST_BATCH_2.dat']
 
-describe('poll inbound', () => {
+describe('pollInbound', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-
-    mockStorage.getPendingControlFiles.mockResolvedValue([
-      FILE_NAME_1,
-      FILE_NAME_2
-    ])
+    mockStorage.getPendingControlFiles.mockResolvedValue(FILES)
+    mockVerify.mockResolvedValue()
   })
 
-  test('should get inbound file list', async () => {
+  test('retrieves pending control files', async () => {
     await pollInbound()
     expect(mockStorage.getPendingControlFiles).toHaveBeenCalled()
   })
 
-  test('should call verify batch for each file', async () => {
+  test('verifies each file', async () => {
     await pollInbound()
-    expect(mockVerify).toHaveBeenCalledTimes(2)
+    expect(mockVerify).toHaveBeenCalledTimes(FILES.length)
+    FILES.forEach((file, idx) => {
+      expect(mockVerify).toHaveBeenNthCalledWith(idx + 1, file)
+    })
   })
 
-  test('should call verify batch with correct file name', async () => {
+  test('continues processing remaining files if one verify fails', async () => {
+    mockVerify.mockRejectedValueOnce(new Error('verify failed'))
     await pollInbound()
-    expect(mockVerify).toHaveBeenNthCalledWith(1, FILE_NAME_1)
-    expect(mockVerify).toHaveBeenNthCalledWith(2, FILE_NAME_2)
+    expect(mockVerify).toHaveBeenCalledTimes(FILES.length)
   })
 
-  test('should throw error once and continue progressing with remaining inbound files', async () => {
-    mockVerify.mockRejectedValueOnce(new Error('not found'))
-    await pollInbound()
-    expect(mockVerify).toHaveBeenCalledTimes(2)
+  test('throws if unable to retrieve inbound files', async () => {
+    mockStorage.getPendingControlFiles.mockRejectedValueOnce(new Error('fetch failed'))
+    await expect(pollInbound()).rejects.toThrow('fetch failed')
   })
 
-  test('should throw an error if inbound file list cannot be retrieved', async () => {
-    mockStorage.getPendingControlFiles.mockRejectedValueOnce(new Error('not found'))
-    await expect(pollInbound()).rejects.toThrow('not found')
-  })
-
-  test('should not throw an error in poll inbound if verify batch throws an error', async () => {
-    mockVerify.mockRejectedValueOnce(new Error('not found'))
-    await expect(pollInbound).not.toThrow('not found')
-  })
-
-  test('should throw an error in verify batch if verify batch throws an error', async () => {
-    mockVerify.mockRejectedValueOnce(new Error('not found'))
-    await expect(mockVerify).rejects.toThrow('not found')
-  })
-
-  test('should not call verify batch if no files', async () => {
+  test('does nothing if no files are pending', async () => {
     mockStorage.getPendingControlFiles.mockResolvedValue([])
     await pollInbound()
     expect(mockVerify).not.toHaveBeenCalled()

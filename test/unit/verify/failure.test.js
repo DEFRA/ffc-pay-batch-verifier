@@ -2,42 +2,28 @@ jest.mock('../../../app/storage')
 const mockStorage = require('../../../app/storage')
 const failure = require('../../../app/verify/failure')
 
-const PENDING_BATCH_BLOB_NAME = 'PENDING_TEST_BATCH.dat'
-const PENDING_CTL_BATCH_BLOB_NAME = 'CTL_PENDING_TEST_BATCH.dat'
-const PENDING_CHECKSUM_BLOB_NAME = 'PENDING_TEST_BATCH.txt'
-const PENDING_CTL_CHECKSUM_BLOB_NAME = 'CTL_PENDING_TEST_BATCH.txt'
-
-let pendingFilenames
+const FILES = {
+  batch: 'PENDING_TEST_BATCH.dat',
+  control: 'CTL_PENDING_TEST_BATCH.dat',
+  checksum: 'PENDING_TEST_BATCH.txt',
+  checksumControl: 'CTL_PENDING_TEST_BATCH.txt'
+}
 
 describe('failure', () => {
+  let pendingFilenames
+
   beforeEach(() => {
     jest.resetAllMocks()
-
     pendingFilenames = {
-      controlFilename: PENDING_CTL_BATCH_BLOB_NAME,
-      batchFilename: PENDING_BATCH_BLOB_NAME,
-      checksumControlFilename: PENDING_CTL_CHECKSUM_BLOB_NAME,
-      checksumFilename: PENDING_CHECKSUM_BLOB_NAME
+      batchFilename: FILES.batch,
+      controlFilename: FILES.control,
+      checksumFilename: FILES.checksum,
+      checksumControlFilename: FILES.checksumControl
     }
   })
 
-  test('should quarantine batch file', async () => {
+  test.each(Object.values(FILES))('quarantines file %s', async (filename) => {
     await failure(pendingFilenames)
-    expect(mockStorage.quarantineFile).toBeCalledWith(PENDING_BATCH_BLOB_NAME)
-  })
-
-  test('should quarantine control file', async () => {
-    await failure(pendingFilenames)
-    expect(mockStorage.quarantineFile).toBeCalledWith(PENDING_CTL_BATCH_BLOB_NAME)
-  })
-
-  test('should quarantine checksum file', async () => {
-    await failure(pendingFilenames)
-    expect(mockStorage.quarantineFile).toBeCalledWith(PENDING_CHECKSUM_BLOB_NAME)
-  })
-
-  test('should quarantine checksum control file', async () => {
-    await failure(pendingFilenames)
-    expect(mockStorage.quarantineFile).toBeCalledWith(PENDING_CTL_CHECKSUM_BLOB_NAME)
+    expect(mockStorage.quarantineFile).toHaveBeenCalledWith(filename)
   })
 })

@@ -17,72 +17,43 @@ let pendingFilenames
 describe('get files', () => {
   beforeEach(() => {
     jest.resetAllMocks()
-
     mockStorage.getFile.mockResolvedValue(FILE_CONTENT)
-    mockRetry.mockImplementation((fn) => fn())
+    mockRetry.mockImplementation(fn => fn())
 
     pendingFilenames = {
-      controlFilename: PENDING_CTL_BATCH_BLOB_NAME,
       batchFilename: PENDING_BATCH_BLOB_NAME,
-      checksumControlFilename: PENDING_CTL_CHECKSUM_BLOB_NAME,
-      checksumFilename: PENDING_CHECKSUM_BLOB_NAME
+      controlFilename: PENDING_CTL_BATCH_BLOB_NAME,
+      checksumFilename: PENDING_CHECKSUM_BLOB_NAME,
+      checksumControlFilename: PENDING_CTL_CHECKSUM_BLOB_NAME
     }
   })
 
-  test('should try to get batch control file first', async () => {
+  test.each([
+    [1, PENDING_BATCH_BLOB_NAME],
+    [2, PENDING_CTL_BATCH_BLOB_NAME],
+    [3, PENDING_CHECKSUM_BLOB_NAME],
+    [4, PENDING_CTL_CHECKSUM_BLOB_NAME]
+  ])('calls getFile #%i with %s', async (nth, filename) => {
     await getFiles(pendingFilenames)
-    expect(mockStorage.getFile).toHaveBeenNthCalledWith(1, PENDING_CTL_BATCH_BLOB_NAME)
+    expect(mockStorage.getFile).toHaveBeenNthCalledWith(nth, filename)
   })
 
-  test('should try to get batch file second', async () => {
-    await getFiles(pendingFilenames)
-    expect(mockStorage.getFile).toHaveBeenNthCalledWith(2, PENDING_BATCH_BLOB_NAME)
-  })
-
-  test('should try to get checksum control file third', async () => {
-    await getFiles(pendingFilenames)
-    expect(mockStorage.getFile).toHaveBeenNthCalledWith(3, PENDING_CTL_CHECKSUM_BLOB_NAME)
-  })
-
-  test('should try to get checksum file fourth', async () => {
-    await getFiles(pendingFilenames)
-    expect(mockStorage.getFile).toHaveBeenNthCalledWith(4, PENDING_CHECKSUM_BLOB_NAME)
-  })
-
-  test('should return an array of filenames and file contents', async () => {
+  test('returns array of filenames and file contents', async () => {
     const result = await getFiles(pendingFilenames)
     expect(result).toEqual([
-      { filename: PENDING_CTL_BATCH_BLOB_NAME, content: FILE_CONTENT },
       { filename: PENDING_BATCH_BLOB_NAME, content: FILE_CONTENT },
-      { filename: PENDING_CTL_CHECKSUM_BLOB_NAME, content: FILE_CONTENT },
-      { filename: PENDING_CHECKSUM_BLOB_NAME, content: FILE_CONTENT }
+      { filename: PENDING_CTL_BATCH_BLOB_NAME, content: FILE_CONTENT },
+      { filename: PENDING_CHECKSUM_BLOB_NAME, content: FILE_CONTENT },
+      { filename: PENDING_CTL_CHECKSUM_BLOB_NAME, content: FILE_CONTENT }
     ])
   })
 
-  test('should retry getting files', async () => {
+  test('retries getting files', async () => {
     await getFiles(pendingFilenames)
     expect(mockRetry).toHaveBeenCalledTimes(4)
   })
 
-  test('should throw an error if checksum control file is not found', async () => {
-    mockStorage.getFile.mockRejectedValueOnce(new Error('not found'))
-    await expect(getFiles(pendingFilenames)).rejects.toThrow('not found')
-  })
-
-  test('should throw an error if checksum file is not found', async () => {
-    mockStorage.getFile.mockResolvedValueOnce(FILE_CONTENT)
-    mockStorage.getFile.mockRejectedValueOnce(new Error('not found'))
-    await expect(getFiles(pendingFilenames)).rejects.toThrow('not found')
-  })
-
-  test('should throw an error if batch file is not found', async () => {
-    mockStorage.getFile.mockResolvedValueOnce(FILE_CONTENT)
-    mockStorage.getFile.mockResolvedValueOnce(FILE_CONTENT)
-    mockStorage.getFile.mockRejectedValueOnce(new Error('not found'))
-    await expect(getFiles(pendingFilenames)).rejects.toThrow('not found')
-  })
-
-  test('should throw an error if any file is not found', async () => {
+  test('throws if any file is not found', async () => {
     mockStorage.getFile.mockRejectedValueOnce(new Error('not found'))
     await expect(getFiles(pendingFilenames)).rejects.toThrow('not found')
   })

@@ -2,70 +2,45 @@ jest.mock('../../../app/storage')
 const mockStorage = require('../../../app/storage')
 const success = require('../../../app/verify/success')
 
-const PENDING_BATCH_BLOB_NAME = 'PENDING_TEST_BATCH.dat'
-const PENDING_CTL_BATCH_BLOB_NAME = 'CTL_PENDING_TEST_BATCH.dat'
-const PENDING_CHECKSUM_BLOB_NAME = 'PENDING_TEST_BATCH.txt'
-const PENDING_CTL_CHECKSUM_BLOB_NAME = 'CTL_PENDING_TEST_BATCH.txt'
+const PENDING = {
+  batch: 'PENDING_TEST_BATCH.dat',
+  control: 'CTL_PENDING_TEST_BATCH.dat',
+  checksum: 'PENDING_TEST_BATCH.txt',
+  checksumControl: 'CTL_PENDING_TEST_BATCH.txt'
+}
 
-const PROCESSED_BATCH_BLOB_NAME = 'TEST_BATCH.dat'
-const PROCESSED_CTL_BATCH_BLOB_NAME = 'CTL_TEST_BATCH.dat'
-const PROCESSED_CHECKSUM_BLOB_NAME = 'TEST_BATCH.txt'
-const PROCESSED_CTL_CHECKSUM_BLOB_NAME = 'CTL_TEST_BATCH.txt'
+const PROCESSED = {
+  batch: 'TEST_BATCH.dat',
+  control: 'CTL_TEST_BATCH.dat',
+  checksum: 'TEST_BATCH.txt',
+  checksumControl: 'CTL_TEST_BATCH.txt'
+}
 
-let pendingFilenames
-let processedFilenames
+describe('success', () => {
+  let pendingFilenames, processedFilenames
 
-describe('failure', () => {
   beforeEach(() => {
     jest.resetAllMocks()
-
-    pendingFilenames = {
-      controlFilename: PENDING_CTL_BATCH_BLOB_NAME,
-      batchFilename: PENDING_BATCH_BLOB_NAME,
-      checksumControlFilename: PENDING_CTL_CHECKSUM_BLOB_NAME,
-      checksumFilename: PENDING_CHECKSUM_BLOB_NAME
-    }
-
-    processedFilenames = {
-      controlFilename: PROCESSED_CTL_BATCH_BLOB_NAME,
-      batchFilename: PROCESSED_BATCH_BLOB_NAME,
-      checksumControlFilename: PROCESSED_CTL_CHECKSUM_BLOB_NAME,
-      checksumFilename: PROCESSED_CHECKSUM_BLOB_NAME
-    }
+    pendingFilenames = { ...PENDING }
+    processedFilenames = { ...PROCESSED }
   })
 
-  test('should rename batch file', async () => {
+  test.each([
+    ['batch', PENDING.batch, PROCESSED.batch],
+    ['control', PENDING.control, PROCESSED.control],
+    ['checksum', PENDING.checksum, PROCESSED.checksum],
+    ['checksumControl', PENDING.checksumControl, PROCESSED.checksumControl]
+  ])('renames %s file', async (_, pendingFile, processedFile) => {
     await success(pendingFilenames, processedFilenames)
-    expect(mockStorage.renameFile).toBeCalledWith(PENDING_BATCH_BLOB_NAME, PROCESSED_BATCH_BLOB_NAME)
+    expect(mockStorage.renameFile).toHaveBeenCalledWith(pendingFile, processedFile)
   })
 
-  test('should rename control file', async () => {
+  test.each([
+    PROCESSED.checksumControl,
+    PROCESSED.checksum,
+    PROCESSED.control
+  ])('archives file %s', async (file) => {
     await success(pendingFilenames, processedFilenames)
-    expect(mockStorage.renameFile).toBeCalledWith(PENDING_CTL_BATCH_BLOB_NAME, PROCESSED_CTL_BATCH_BLOB_NAME)
-  })
-
-  test('should rename checksum file', async () => {
-    await success(pendingFilenames, processedFilenames)
-    expect(mockStorage.renameFile).toBeCalledWith(PENDING_CHECKSUM_BLOB_NAME, PROCESSED_CHECKSUM_BLOB_NAME)
-  })
-
-  test('should rename checksum control file', async () => {
-    await success(pendingFilenames, processedFilenames)
-    expect(mockStorage.renameFile).toBeCalledWith(PENDING_CTL_CHECKSUM_BLOB_NAME, PROCESSED_CTL_CHECKSUM_BLOB_NAME)
-  })
-
-  test('should archive checksum control file', async () => {
-    await success(pendingFilenames, processedFilenames)
-    expect(mockStorage.archiveFile).toBeCalledWith(PROCESSED_CTL_CHECKSUM_BLOB_NAME)
-  })
-
-  test('should archive checksum file', async () => {
-    await success(pendingFilenames, processedFilenames)
-    expect(mockStorage.archiveFile).toBeCalledWith(PROCESSED_CHECKSUM_BLOB_NAME)
-  })
-
-  test('should archive control file', async () => {
-    await success(pendingFilenames, processedFilenames)
-    expect(mockStorage.archiveFile).toBeCalledWith(PROCESSED_CTL_BATCH_BLOB_NAME)
+    expect(mockStorage.archiveFile).toHaveBeenCalledWith(file)
   })
 })
