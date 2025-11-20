@@ -67,18 +67,34 @@ describe('verifyBatchContent', () => {
     ]
 
     test.each(tests)('processes batch %p and moves/renames correctly', async ({ blob, ctl, checksum, ctlChecksum, expectedInbound, expectedArchive }) => {
-      if (blob) await upload(blob, VALID_CONTENT)
-      if (ctl) await upload(ctl, EMPTY_CONTENT)
-      if (checksum) await upload(checksum, VALID_HASH)
-      if (ctlChecksum) await upload(ctlChecksum, EMPTY_CONTENT)
+      if (blob) {
+        await upload(blob, VALID_CONTENT)
+      }
+
+      if (ctl) {
+        await upload(ctl, EMPTY_CONTENT)
+      }
+
+      if (checksum) {
+        await upload(checksum, VALID_HASH)
+      }
+
+      if (ctlChecksum) {
+        await upload(ctlChecksum, EMPTY_CONTENT)
+      }
 
       await pollInbound()
 
       const inbound = await listBlobs(INBOUND)
       const archive = await listBlobs(ARCHIVE)
 
-      if (expectedInbound) expect(inbound).toContain(expectedInbound)
-      if (expectedArchive) expect(archive).toContain(expectedArchive)
+      if (expectedInbound) {
+        expect(inbound).toContain(expectedInbound)
+      }
+
+      if (expectedArchive) {
+        expect(archive).toContain(expectedArchive)
+      }
     })
   })
 

@@ -114,8 +114,13 @@ describe('verifyBatchContent', () => {
       const inboundFiles = Object.keys(mockBlobs).filter(f => f.startsWith('inbound/') && (f.includes('TEST_BATCH') || f.includes('FCAP')))
       const archiveFiles = Object.keys(mockBlobs).filter(f => f.startsWith('archive/') && (f.includes('TEST_BATCH') || f.includes('FCAP')))
 
-      if (expectedInbound) expect(inboundFiles).toContain(`inbound/${expectedInbound}`)
-      if (expectedArchive) expect(archiveFiles).toContain(`archive/${expectedArchive}`)
+      if (expectedInbound) {
+        expect(inboundFiles).toContain(`inbound/${expectedInbound}`)
+      }
+
+      if (expectedArchive) {
+        expect(archiveFiles).toContain(`archive/${expectedArchive}`)
+      }
     })
   })
 
