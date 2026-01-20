@@ -2,4 +2,4 @@
 environment: production
 environmentCode: snd
 container:
-  azureStorageAccountName: snd2ffcpayst1001
+  azureStorageAccountName: snd2ffcpayst2001

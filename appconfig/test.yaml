@@ -1,6 +1,6 @@
 ---
 environment: production
-environmentCode: dev
+environmentCode: test
 container:
   azureStorageAccountName: testffcpayst1001
 secretProviderClass:
