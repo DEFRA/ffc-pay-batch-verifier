@@ -1,11 +1,11 @@
 ---
 environment: production
-environmentCode: dev
+environmentCode: prd
 container:
-  azureStorageAccountName: testffcpayst1001
+  azureStorageAccountName: prdffcpayst1001
 secretProviderClass:
   azure:
-    keyvaultName: DEVFFCINFKV1001
+    keyvaultName: PRDFFCINFKV1001
     objects: # reading the secret from Azure Key Vault
       - objectName: devtest-ffcahwr-appInsights-connectionString
         objectType: secret
