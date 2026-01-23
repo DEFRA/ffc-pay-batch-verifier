@@ -35,3 +35,22 @@ extends:
     prDeployment: ${{ parameters.prDeployment }}
     branchDeployment: ${{ parameters.branchDeployment }}
     sndDeployment: ${{ parameters.sndDeployment }}
+    variableGroupName: ffc-pay-batch-verifier-env-var
+    pr_params:
+      pollingInterval: $(pr_pollingInterval)
+      pollingActive: $(pr_pollingActive)
+    snd2_params:
+      pollingInterval: $(snd2_pollingInterval)
+      pollingActive: $(snd2_pollingActive)
+    dev_params:
+      pollingInterval: $(dev_pollingInterval)
+      pollingActive: $(dev_pollingActive)
+    test_params:
+      pollingInterval: $(test_pollingInterval)
+      pollingActive: $(test_pollingActive)
+    pre_params:
+      pollingInterval: $(pre_pollingInterval)
+      pollingActive: $(pre_pollingActive)
+    prd_params:
+      pollingInterval: $(prd_pollingInterval)
+      pollingActive: $(prd_pollingActive)
