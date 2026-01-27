@@ -14,7 +14,7 @@ containerConfigMap:
   name: ffc-pay-batch-verifier-config-map
 
 containerSecret:
-  name: ffc-pay-batch-verifier-container-secret
+  name: ffc-pay-batch-verifier
   type: Opaque
 
 deployment:
