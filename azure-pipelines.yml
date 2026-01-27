@@ -37,20 +37,20 @@ extends:
     sndDeployment: ${{ parameters.sndDeployment }}
     variableGroupName: ffc-pay-batch-verifier-env-var
     pr_params:
-      pollingInterval: convert(variables['pr_pollingInterval'], 'int')
+      pollingInterval: $(pr_pollingInterval)
       pollingActive: ${{ eq(variables['pr_pollingActive'], 'true') }}
     snd2_params:
-      pollingInterval: convert(variables['snd2_pollingInterval'], 'int')
+      pollingInterval: $(snd2_pollingInterval)
       pollingActive: ${{ eq(variables['snd2_pollingActive'], 'true') }}
     dev_params:
-      pollingInterval: convert(variables['dev_pollingInterval'], 'int')
+      pollingInterval: $(dev_pollingInterval)
       pollingActive: ${{ eq(variables['dev_pollingActive'], 'true') }}
     test_params:
-      pollingInterval: convert(variables['test_pollingInterval'], 'int')
+      pollingInterval: $(test_pollingInterval)
       pollingActive: ${{ eq(variables['test_pollingActive'], 'true') }}
     pre_params:
-      pollingInterval: ${{ convert(variables['pre_pollingInterval'], 'int') }}
+      pollingInterval: $(pre_pollingInterval)
       pollingActive: ${{ eq(variables['pre_pollingActive'], 'true') }}
     prd_params:
-      pollingInterval: ${{ convert(variables['prd_pollingInterval'], 'int') }}
+      pollingInterval: $(prd_pollingInterval)
       pollingActive: ${{ eq(variables['prd_pollingActive'], 'true') }}
