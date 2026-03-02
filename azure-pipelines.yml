@@ -1,0 +1,60 @@
+name: '$(Build.SourceBranchName)$(System.PullRequest.SourceBranch)$(Rev:.r)'
+
+trigger:
+  - main
+  - feature/*
+  - release/*
+
+pr:
+  - main
+  - releases/*
+
+parameters:
+  - name: prDeployment
+    type: boolean
+    default: true
+  - name: branchDeployment
+    type: boolean
+    default: true
+  - name: sndDeployment
+    type: boolean
+    default: true
+
+resources:
+  repositories:
+    - repository: templates
+      endpoint: DEFRA
+      type: github
+      name: defra/fcp-pipeline-common
+      # ref: pl-709   # Optional: build specific pipeline branch
+
+extends:
+  template: fcp-common-pipeline.yaml@templates
+  parameters:
+    appFrameworkType: nodejs   # Optional: nodejs (default), dotnet, java
+    Type: kubernetes           # Optional: kubernetes (default), npm, functions, nuget
+    npmLegacyPeerDeps: false   # Optional: default is false
+    dockerFilePath: Dockerfile # Optional default is Dockerfile
+    failOnThreshold: moderate  # Optional: moderate (default), low, high, critical
+    prDeployment: ${{ parameters.prDeployment }}
+    branchDeployment: ${{ parameters.branchDeployment }}
+    sndDeployment: ${{ parameters.sndDeployment }}
+    variableGroupName: ffc-pay-batch-verifier-env-var
+    pr_params:
+      container.pollingInterval: $(pr_pollingInterval)
+      container.pollingActive: ${{ eq(variables['pr_pollingActive'], 'true') }}
+    snd2_params:
+      container.pollingInterval: $(snd2_pollingInterval)
+      container.pollingActive: ${{ eq(variables['snd2_pollingActive'], 'true') }}
+    dev_params:
+      container.pollingInterval: $(dev_pollingInterval)
+      container.pollingActive: ${{ eq(variables['dev_pollingActive'], 'true') }}
+    test_params:
+      container.pollingInterval: $(test_pollingInterval)
+      container.pollingActive: ${{ eq(variables['test_pollingActive'], 'true') }}
+    pre_params:
+      container.pollingInterval: $(pre_pollingInterval)
+      container.pollingActive: ${{ eq(variables['pre_pollingActive'], 'true') }}
+    prd_params:
+      container.pollingInterval: $(prd_pollingInterval)
+      container.pollingActive: ${{ eq(variables['prd_pollingActive'], 'true') }}
