@@ -42,19 +42,19 @@ extends:
     variableGroupName: ffc-pay-batch-verifier-env-var
     pr_params:
       container.pollingInterval: $(pr_pollingInterval)
-      container.pollingActive: ${{ eq(variables['pr_pollingActive'], 'true') }}
+      container.pollingActive: $(pr_pollingActive)
     snd2_params:
       container.pollingInterval: $(snd2_pollingInterval)
-      container.pollingActive: ${{ eq(variables['snd2_pollingActive'], 'true') }}
+      container.pollingActive: $(snd2_pollingActive)
     dev_params:
       container.pollingInterval: $(dev_pollingInterval)
-      container.pollingActive: ${{ eq(variables['dev_pollingActive'], 'true') }}
+      container.pollingActive: $(dev_pollingActive)
     test_params:
       container.pollingInterval: $(test_pollingInterval)
-      container.pollingActive: ${{ eq(variables['test_pollingActive'], 'true') }}
+      container.pollingActive: $(test_pollingActive)
     pre_params:
       container.pollingInterval: $(pre_pollingInterval)
-      container.pollingActive: ${{ eq(variables['pre_pollingActive'], 'true') }}
+      container.pollingActive: $(pre_pollingActive)
     prd_params:
       container.pollingInterval: $(prd_pollingInterval)
-      container.pollingActive: ${{ eq(variables['prd_pollingActive'], 'true') }}
+      container.pollingActive: $(prd_pollingActive)
