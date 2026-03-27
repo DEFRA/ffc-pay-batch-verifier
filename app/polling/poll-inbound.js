@@ -17,7 +17,7 @@ const pollInbound = async () => {
     console.log(`[pollInbound] Retrieved ${controlFiles.length} control files in ${listDuration}ms`)
   } catch (err) {
     console.error('[pollInbound] Failed to fetch control files', err)
-    throw err   // ← critical fix
+    throw err
   }
 
   for (const controlFile of controlFiles) {
