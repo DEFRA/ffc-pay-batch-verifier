@@ -46,7 +46,8 @@ describe('BlobServiceClient initialization', () => {
 
     require('../../app/storage')
 
-    expect(consoleLogSpy).toHaveBeenCalledWith('Using connection string for BlobServiceClient')
+    expect(consoleLogSpy).toHaveBeenCalledWith('[storage] Initialising BlobServiceClient')
+    expect(consoleLogSpy).toHaveBeenCalledWith('[storage] Using connection string for BlobServiceClient')
     expect(BlobServiceClient.fromConnectionString).toHaveBeenCalledWith(config.connectionStr)
   })
 
@@ -59,7 +60,8 @@ describe('BlobServiceClient initialization', () => {
 
     const expectedUri = `https://${config.storageAccount}.blob.core.windows.net`
 
-    expect(consoleLogSpy).toHaveBeenCalledWith('Using DefaultAzureCredential for BlobServiceClient')
+    expect(consoleLogSpy).toHaveBeenCalledWith('[storage] Initialising BlobServiceClient')
+    expect(consoleLogSpy).toHaveBeenCalledWith('[storage] Using DefaultAzureCredential for BlobServiceClient')
     expect(DefaultAzureCredential).toHaveBeenCalledWith({ managedIdentityClientId: config.managedIdentityClientId })
     expect(BlobServiceClient).toHaveBeenCalledWith(expectedUri,
       expect.objectContaining({
