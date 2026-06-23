@@ -31,6 +31,7 @@ container:
   azureStorageCreateContainers: false
   pollingInterval: 10000
   pollingActive: true
+  azureLogLevel: error
 
 workloadIdentity: true
 
