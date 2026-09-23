@@ -26,10 +26,10 @@
   ],
   "license": "OGL-UK-3.0",
   "dependencies": {
-    "@azure/identity": "4.4.1",
+    "@azure/identity": "4.13.1",
     "@azure/storage-blob": "12.31.0",
-    "@azure/monitor-opentelemetry": "1.18.0",
-    "joi": "18.2.1",
+    "@azure/monitor-opentelemetry": "1.20.0",
+    "joi": "18.2.9",
     "log-timestamp": "0.3.0"
   },
   "devDependencies": {
@@ -44,12 +44,5 @@
     "ignore": [
       "**/test-output/**"
     ]
-  },
-  "overrides": {
-    "protobufjs": "8.6.3",
-    "uuid": "11.1.1",
-    "joi": "18.2.1",
-    "js-yaml": "4.2.0",
-    "@opentelemetry/core": "2.8.0"
   }
 }
